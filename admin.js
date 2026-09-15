@@ -21,17 +21,12 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ============================================================
-// ПАРОЛЬ АДМИНКИ — ПОМЕНЯЙ НА СВОЙ
+// ПАРОЛЬ АДМИНКИ
 // ============================================================
 const ADMIN_PASSWORD = 'hyojoy2026admin';
 // ============================================================
 
 let currentUser = null;
-let allUsers = [];
-let editingUid = null;
-let allProducts = [];
-let editingProductId = null;
-let pendingProductImage = null;
 
 // ===== Утилиты =====
 function escapeHtml(s) {
@@ -68,6 +63,8 @@ function tryLogin() {
             document.getElementById('pass-shown').textContent = ADMIN_PASSWORD;
             loadUsers();
             loadProducts();
+            loadFiles();
+            loadCompany();
             loadApiKey();
         }, 400);
     } else {
@@ -83,7 +80,7 @@ document.getElementById('logout-admin').addEventListener('click', () => {
     document.getElementById('login-msg').className = 'message';
 });
 
-// ===== Табы админки =====
+// ===== Табы =====
 document.querySelectorAll('.tab').forEach((tab) => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
@@ -96,6 +93,9 @@ document.querySelectorAll('.tab').forEach((tab) => {
 // ============================================================
 // АККАУНТЫ
 // ============================================================
+let allUsers = [];
+let editingUid = null;
+
 async function loadUsers() {
     const list = document.getElementById('users-list');
     list.innerHTML = '<div class="empty">Загрузка...</div>';
@@ -167,7 +167,6 @@ document.getElementById('search').addEventListener('input', (e) => {
     renderUsers(filtered);
 });
 
-// ===== Модалка аккаунта =====
 function openEdit(uid) {
     const u = allUsers.find((x) => x.uid === uid);
     if (!u) return;
@@ -246,8 +245,6 @@ document.getElementById('edit-delete').addEventListener('click', async () => {
     if (!editingUid) return;
     if (!confirm('Удалить аккаунт навсегда? Действие необратимо.')) return;
     const msg = document.getElementById('edit-msg');
-    const btn = document.getElementById('edit-delete');
-    btn.disabled = true;
     try {
         await deleteDoc(doc(db, 'users', editingUid));
         msg.className = 'message success';
@@ -259,12 +256,15 @@ document.getElementById('edit-delete').addEventListener('click', async () => {
         msg.className = 'message error';
         msg.textContent = 'Ошибка: ' + e.message;
     }
-    btn.disabled = false;
 });
 
 // ============================================================
 // ТОВАРЫ
 // ============================================================
+let allProducts = [];
+let editingProductId = null;
+let pendingProductImage = null;
+
 async function loadProducts() {
     const list = document.getElementById('products-list');
     list.innerHTML = '<div class="empty">Загрузка...</div>';
@@ -295,14 +295,11 @@ function renderProducts(list) {
         return;
     }
     box.innerHTML = list.map((p) => {
-        const img = p.image
-            ? `<img src="${p.image}" alt="">`
-            : '';
+        const img = p.image ? `<img src="${p.image}" alt="">` : '';
         const price = Number(p.price || 0);
         const stock = Number(p.stock || 0);
         const created = p.createdAt && p.createdAt.toDate
-            ? p.createdAt.toDate().toLocaleDateString('ru-RU')
-            : '';
+            ? p.createdAt.toDate().toLocaleDateString('ru-RU') : '';
         return `
             <div class="product-card" data-id="${p.id}">
                 <div class="product-img ${p.image ? '' : 'no-img'}">${p.image ? img : 'НЕТ ФОТО'}</div>
@@ -397,13 +394,8 @@ function processImage(file, size = 400) {
             img.onload = () => {
                 const ratio = img.width / img.height;
                 let nw, nh;
-                if (ratio > 1) {
-                    nw = size;
-                    nh = Math.round(size / ratio);
-                } else {
-                    nh = size;
-                    nw = Math.round(size * ratio);
-                }
+                if (ratio > 1) { nw = size; nh = Math.round(size / ratio); }
+                else { nh = size; nw = Math.round(size * ratio); }
                 const canvas = document.createElement('canvas');
                 canvas.width = size;
                 canvas.height = size;
@@ -481,14 +473,238 @@ document.getElementById('product-delete').addEventListener('click', async () => 
     if (!editingProductId) return;
     if (!confirm('Удалить товар?')) return;
     const msg = document.getElementById('product-msg');
-    const btn = document.getElementById('product-delete');
-    btn.disabled = true;
     try {
         await deleteDoc(doc(db, 'products', editingProductId));
         msg.className = 'message success';
         msg.textContent = 'Удалено';
         await loadProducts();
         setTimeout(closeProduct, 600);
+    } catch (e) {
+        console.error(e);
+        msg.className = 'message error';
+        msg.textContent = 'Ошибка: ' + e.message;
+    }
+});
+
+// ============================================================
+// ФАЙЛЫ
+// ============================================================
+let allFiles = [];
+let editingFileId = null;
+let pendingFileData = null;
+let pendingFileName = null;
+
+async function loadFiles() {
+    const box = document.getElementById('files-list');
+    if (!box) return;
+    box.innerHTML = '<div class="empty">Загрузка...</div>';
+    try {
+        const snap = await getDocs(collection(db, 'downloads'));
+        allFiles = [];
+        snap.forEach((d) => allFiles.push({ id: d.id, ...d.data() }));
+        allFiles.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        renderFiles();
+    } catch (e) {
+        box.innerHTML = '<div class="empty">Ошибка: ' + e.message + '</div>';
+        console.error(e);
+    }
+}
+
+function renderFiles() {
+    const box = document.getElementById('files-list');
+    if (!allFiles.length) {
+        box.innerHTML = '<div class="empty">Файлов нет</div>';
+        return;
+    }
+    box.innerHTML = allFiles.map((f) => {
+        const sizeKB = f.size ? Math.round(f.size / 1024) + ' КБ' : '—';
+        return `
+            <div class="file-row" data-id="${f.id}">
+                <div class="file-row-icon">💾</div>
+                <div class="file-row-info">
+                    <div class="file-row-title">${escapeHtml(f.title || 'Без названия')}</div>
+                    <div class="file-row-desc">${escapeHtml(f.description || '')}</div>
+                </div>
+                <div class="file-row-size">${sizeKB}</div>
+            </div>
+        `;
+    }).join('');
+    box.querySelectorAll('.file-row').forEach((el) => {
+        el.addEventListener('click', () => openFile(el.dataset.id));
+    });
+}
+
+document.getElementById('new-file-btn').addEventListener('click', () => {
+    editingFileId = null;
+    pendingFileData = null;
+    pendingFileName = null;
+    document.getElementById('file-modal-title').textContent = 'Новый файл';
+    document.getElementById('file-title').value = '';
+    document.getElementById('file-desc').value = '';
+    document.getElementById('file-preview').textContent = '?';
+    document.getElementById('file-msg').className = 'message';
+    document.getElementById('file-delete').style.display = 'none';
+    document.getElementById('file-modal').classList.add('open');
+});
+
+function openFile(id) {
+    const f = allFiles.find((x) => x.id === id);
+    if (!f) return;
+    editingFileId = id;
+    pendingFileData = null;
+    pendingFileName = null;
+    document.getElementById('file-modal-title').textContent = 'Редактирование файла';
+    document.getElementById('file-title').value = f.title || '';
+    document.getElementById('file-desc').value = f.description || '';
+    document.getElementById('file-preview').textContent = '💾';
+    document.getElementById('file-msg').className = 'message';
+    document.getElementById('file-delete').style.display = 'block';
+    document.getElementById('file-modal').classList.add('open');
+}
+
+document.getElementById('file-close').addEventListener('click', closeFile);
+document.getElementById('file-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'file-modal') closeFile();
+});
+function closeFile() {
+    document.getElementById('file-modal').classList.remove('open');
+    editingFileId = null;
+    pendingFileData = null;
+    pendingFileName = null;
+}
+
+document.getElementById('file-pick').addEventListener('click', () => {
+    document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 700 * 1024) {
+        const msg = document.getElementById('file-msg');
+        msg.className = 'message error';
+        msg.textContent = 'Файл слишком большой: ' + Math.round(file.size / 1024) + ' КБ. Максимум 700 КБ.';
+        e.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        pendingFileData = reader.result.split(',')[1];
+        pendingFileName = file.name;
+        document.getElementById('file-preview').textContent = '✓';
+        if (!document.getElementById('file-title').value) {
+            document.getElementById('file-title').value = file.name;
+        }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+});
+
+document.getElementById('file-save').addEventListener('click', async () => {
+    const msg = document.getElementById('file-msg');
+    const btn = document.getElementById('file-save');
+    const title = document.getElementById('file-title').value.trim();
+    const description = document.getElementById('file-desc').value.trim();
+
+    if (!title) {
+        msg.className = 'message error';
+        msg.textContent = 'Введите название';
+        return;
+    }
+
+    btn.disabled = true;
+    try {
+        if (editingFileId) {
+            const upd = { title, description };
+            if (pendingFileData) {
+                upd.data = pendingFileData;
+                upd.filename = pendingFileName;
+                upd.size = Math.round(pendingFileData.length * 0.75);
+            }
+            await updateDoc(doc(db, 'downloads', editingFileId), upd);
+            msg.className = 'message success';
+            msg.textContent = 'Сохранено';
+        } else {
+            if (!pendingFileData) {
+                msg.className = 'message error';
+                msg.textContent = 'Выберите файл';
+                btn.disabled = false;
+                return;
+            }
+            await addDoc(collection(db, 'downloads'), {
+                title,
+                description,
+                data: pendingFileData,
+                filename: pendingFileName,
+                size: Math.round(pendingFileData.length * 0.75),
+                createdAt: serverTimestamp()
+            });
+            msg.className = 'message success';
+            msg.textContent = 'Файл добавлен';
+        }
+        await loadFiles();
+        setTimeout(closeFile, 800);
+    } catch (e) {
+        console.error(e);
+        msg.className = 'message error';
+        msg.textContent = 'Ошибка: ' + e.message;
+    }
+    btn.disabled = false;
+});
+
+document.getElementById('file-delete').addEventListener('click', async () => {
+    if (!editingFileId) return;
+    if (!confirm('Удалить файл?')) return;
+    const msg = document.getElementById('file-msg');
+    try {
+        await deleteDoc(doc(db, 'downloads', editingFileId));
+        msg.className = 'message success';
+        msg.textContent = 'Удалено';
+        await loadFiles();
+        setTimeout(closeFile, 600);
+    } catch (e) {
+        console.error(e);
+        msg.className = 'message error';
+        msg.textContent = 'Ошибка: ' + e.message;
+    }
+});
+
+// ============================================================
+// О КОМПАНИИ
+// ============================================================
+async function loadCompany() {
+    try {
+        const snap = await getDoc(doc(db, 'config', 'main'));
+        if (snap.exists()) {
+            const d = snap.data();
+            document.getElementById('company-title').value = d.companyTitle || 'HyoJoy Corporation';
+            document.getElementById('company-desc').value = d.companyDescription || '';
+        } else {
+            document.getElementById('company-title').value = 'HyoJoy Corporation';
+            document.getElementById('company-desc').value = '';
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+document.getElementById('company-save').addEventListener('click', async () => {
+    const title = document.getElementById('company-title').value.trim();
+    const desc = document.getElementById('company-desc').value.trim();
+    const msg = document.getElementById('company-msg');
+    const btn = document.getElementById('company-save');
+    btn.disabled = true;
+
+    try {
+        await setDoc(doc(db, 'config', 'main'), {
+            companyTitle: title,
+            companyDescription: desc,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+        msg.className = 'message success';
+        msg.textContent = 'Сохранено';
     } catch (e) {
         console.error(e);
         msg.className = 'message error';

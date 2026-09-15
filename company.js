@@ -23,8 +23,8 @@ const db = getFirestore(app);
 const COMPANY = {
     name: 'HyoJoy Corporation',
     shares: 20000000,          // 20 млн акций
-    ownerNick: 'OwnerAndLeader',
-    ownerTag: '#luLEQpYL'   // ← впиши тег овнера (первые 8 символов UID)
+    ownerNick: 'Бибуп',
+    ownerTag: '#ВСТАВЬ_СЮДА'   // ← впиши тег овнера (первые 8 символов UID)
 };
 
 // ===== Утилиты =====

@@ -34,10 +34,12 @@
     <div class="tabs">
         <button class="tab active" data-tab="users">Аккаунты</button>
         <button class="tab" data-tab="products">Товары</button>
+        <button class="tab" data-tab="files">Файлы</button>
+        <button class="tab" data-tab="company">О компании</button>
         <button class="tab" data-tab="api">API</button>
     </div>
 
-    <!-- ===== ПАНЕЛЬ АККАУНТОВ ===== -->
+    <!-- ===== АККАУНТЫ ===== -->
     <div class="main panel active" id="panel-users">
         <div class="panel-head">
             <h1>Управление аккаунтами</h1>
@@ -50,7 +52,7 @@
         </div>
     </div>
 
-    <!-- ===== ПАНЕЛЬ ТОВАРОВ ===== -->
+    <!-- ===== ТОВАРЫ ===== -->
     <div class="main panel" id="panel-products">
         <div class="panel-head">
             <h1>Управление товарами</h1>
@@ -61,7 +63,39 @@
         </div>
     </div>
 
-    <!-- ===== ПАНЕЛЬ API ===== -->
+    <!-- ===== ФАЙЛЫ ===== -->
+    <div class="main panel" id="panel-files">
+        <div class="panel-head">
+            <h1>Файлы для скачивания</h1>
+            <button class="new-article-btn" id="new-file-btn">+ Добавить файл</button>
+        </div>
+        <div class="files-list" id="files-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- ===== О КОМПАНИИ ===== -->
+    <div class="main panel" id="panel-company">
+        <div class="panel-head">
+            <h1>О компании</h1>
+        </div>
+        <div class="api-card">
+            <div class="field">
+                <label>Заголовок</label>
+                <input type="text" id="company-title" placeholder="HyoJoy Corporation" maxlength="100">
+            </div>
+            <div class="field">
+                <label>Описание компании</label>
+                <textarea id="company-desc" rows="10" placeholder="Расскажи о компании: чем занимается, чем полезна, что продаёт..."></textarea>
+            </div>
+            <div class="actions-row">
+                <button class="btn-save" id="company-save">Сохранить</button>
+            </div>
+            <div class="message" id="company-msg"></div>
+        </div>
+    </div>
+
+    <!-- ===== API ===== -->
     <div class="main panel" id="panel-api">
         <div class="panel-head">
             <h1>API для инвестиций</h1>
@@ -208,6 +242,47 @@
             </div>
 
             <div class="message" id="product-msg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА ФАЙЛА ===== -->
+<div class="modal" id="file-modal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <div class="modal-title" id="file-modal-title">Новый файл</div>
+            <button class="modal-close" id="file-close">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="field">
+                <label>Название файла</label>
+                <input type="text" id="file-title" placeholder="HyoJoy Game.exe" maxlength="120">
+            </div>
+
+            <div class="field">
+                <label>Описание</label>
+                <input type="text" id="file-desc" placeholder="Игра-кликер для фарма акций" maxlength="200">
+            </div>
+
+            <div class="field">
+                <label>Файл (.exe, .jar, .zip — до 700 КБ)</label>
+                <div class="image-block">
+                    <div class="file-preview" id="file-preview">?</div>
+                    <div class="image-actions">
+                        <button type="button" id="file-pick">Выбрать файл</button>
+                        <div class="image-hint">Максимум ~700 КБ. Большие файлы не влезут в Firestore.</div>
+                    </div>
+                    <input type="file" id="file-input" style="display:none;">
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button class="btn-save" id="file-save">Сохранить</button>
+                <button class="btn-delete" id="file-delete">Удалить</button>
+            </div>
+
+            <div class="message" id="file-msg"></div>
         </div>
     </div>
 </div>
