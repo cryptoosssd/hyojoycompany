@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аккаунты — HyoJoy</title>
+<style>
+:root {
+    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
+    --bg-input-focus: #242424; --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
+    --border: #3a3a3a; --border-hover: #555555;
+    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
+    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
+    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+.header {
+    background: var(--bg-panel); border-bottom: 1px solid var(--border);
+    padding: 14px 30px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.logo { color: var(--text-strong); font-size: 18px; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; cursor: pointer; }
+.back-btn {
+    background: none; border: 1px solid var(--border-hover); color: var(--text);
+    padding: 8px 16px; font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: 0.2s;
+}
+.back-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
+
+.main { flex: 1; padding: 40px; }
+h1 { font-size: 22px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-strong); margin-bottom: 8px; }
+.subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 30px; letter-spacing: 1px; }
+
+.table-wrap { background: var(--bg-panel); border: 1px solid var(--border); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+thead { background: var(--bg-active); }
+th {
+    text-align: left; padding: 14px 18px;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); font-weight: normal;
+    border-bottom: 1px solid var(--border);
+}
+td { padding: 14px 18px; font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:hover { background: var(--bg-hover); }
+tbody tr:last-child td { border-bottom: none; }
+td.num { color: var(--text-muted); width: 50px; }
+td.uid { color: var(--text-muted); font-family: monospace; font-size: 12px; }
+td.date { color: var(--text-muted); font-size: 12px; }
+
+/* Ник + аватар */
+.nick-cell { display: flex; align-items: center; gap: 12px; }
+.avatar-mini {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--bg-active);
+    border: 1px solid var(--border-hover);
+    color: var(--text-strong);
+    font-size: 16px; font-weight: bold;
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden;
+    text-transform: uppercase;
+    user-select: none;
+    flex-shrink: 0;
+}
+.avatar-mini img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.nick-name { color: var(--text-strong); font-weight: bold; }
+.user-status {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 3px;
+    font-weight: bold;
+}
+
+.loading, .empty {
+    padding: 40px; text-align: center;
+    color: var(--text-muted); font-size: 13px; letter-spacing: 2px;
+    text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <button class="back-btn" onclick="location.href='index.html'">Назад</button>
+</div>
+
+<div class="main">
+    <h1>Все аккаунты</h1>
+    <p class="subtitle" id="subtitle">Загрузка...</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ник</th>
+                    <th>Тег (UID)</th>
+                    <th>Дата регистрации</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+
+    <div class="loading" id="loading">Загрузка списка...</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCUSTTJhonzZPOKWUbe_qMZfMmVyFSxjPE",
+    authDomain: "hyojoy-41840.firebaseapp.com",
+    projectId: "hyojoy-41840",
+    storageBucket: "hyojoy-41840.firebasestorage.app",
+    messagingSenderId: "714253431446",
+    appId: "1:714253431446:web:fe08e2cbe51c768dfd48b7",
+    measurementId: "G-DQ3F2VMTCJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function shortUid(uid) { return uid.slice(0, 8); }
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = 'auth.html';
+        return;
+    }
+
+    const tbody = document.getElementById('tbody');
+    const loading = document.getElementById('loading');
+    const subtitle = document.getElementById('subtitle');
+
+    try {
+        const snap = await getDocs(collection(db, 'users'));
+        loading.style.display = 'none';
+
+        if (snap.empty) {
+            subtitle.textContent = 'Пока нет зарегистрированных аккаунтов';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="4" class="empty">—</td>`;
+            tbody.appendChild(tr);
+            return;
+        }
+
+        const items = [];
+        snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+        items.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+
+        subtitle.textContent = `Всего аккаунтов: ${items.length}`;
+
+        const verifiedSvg = `<svg viewBox="0 0 24 24" fill="#a0c4ff" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:-2px;">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+        </svg>`;
+
+        let i = 1;
+        items.forEach((data) => {
+            const nick = data.nick || '—';
+            const avatar = data.avatar || null;
+            const initial = (nick || '?').charAt(0).toUpperCase();
+
+            const avatarInner = avatar
+                ? `<img src="${avatar}" alt="">`
+                : escapeHtml(initial);
+
+            const nickColor = data.nickColor || '';
+            const status = data.status || '';
+            const statusColor = data.statusColor || '#a0c4ff';
+            const verified = data.verified ? verifiedSvg : '';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="num">${i}</td>
+                <td>
+                    <div class="nick-cell">
+                        <div class="avatar-mini">${avatarInner}</div>
+                        <div>
+                            <div class="nick-name" style="${nickColor ? 'color:' + nickColor : ''}">
+                                ${escapeHtml(nick)} ${verified}
+                            </div>
+                            ${status ? `<div class="user-status" style="color:${statusColor}">${escapeHtml(status)}</div>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td class="uid" title="${data.id}">#${shortUid(data.id)}</td>
+                <td class="date">${formatDate(data.createdAt)}</td>
+            `;
+            tbody.appendChild(tr);
+            i++;
+        });
+    } catch (e) {
+        loading.textContent = 'Ошибка: ' + e.message;
+        console.error(e);
+    }
+});
+</script>
+</body>
+</html>

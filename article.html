@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Статья — HyoJoy</title>
+<link rel="stylesheet" href="article.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div class="header-right">
+        <button class="back-btn" onclick="location.href='forum.html'">К форуму</button>
+        <button class="back-btn" id="edit-btn" style="display:none;">Редактировать</button>
+        <button class="back-btn danger" id="delete-btn" style="display:none;">Удалить</button>
+    </div>
+</div>
+
+<div class="main">
+    <article class="article">
+        <div class="article-folder" id="article-folder">📁 ...</div>
+        <h1 class="article-title" id="article-title">Загрузка...</h1>
+        <div class="article-meta" id="article-meta"></div>
+        <div class="article-divider"></div>
+        <div class="article-content" id="article-content"></div>
+    </article>
+
+    <div class="not-found" id="not-found" style="display:none;">
+        Статья не найдена
+    </div>
+</div>
+
+<script type="module" src="article.js"></script>
+</body>
+</html>

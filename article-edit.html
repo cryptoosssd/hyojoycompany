@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Новая статья — HyoJoy</title>
+<link rel="stylesheet" href="article-edit.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div class="header-right">
+        <button class="back-btn" onclick="history.back()">Отмена</button>
+        <button class="back-btn primary" id="save-btn">Сохранить</button>
+    </div>
+</div>
+
+<div class="main">
+    <div class="editor">
+        <div class="editor-head">
+            <h1 id="editor-title">Новая статья</h1>
+            <p class="editor-hint">Поддерживается: <code>**жирный**</code>, <code>*курсив*</code>, <code>`код`</code>, <code>## заголовок</code>, <code>- список</code>, <code>> цитата</code>, <code>```код```</code>, <code>[ссылка](url)</code></p>
+        </div>
+
+        <div class="field">
+            <label>Заголовок статьи</label>
+            <input type="text" id="title" placeholder="О чём статья?" maxlength="140">
+        </div>
+
+        <div class="field">
+            <label>Папка (раздел)</label>
+            <input type="text" id="folder" placeholder="Например: Правила, Гайды, Новости" maxlength="40" list="folders-list">
+            <datalist id="folders-list"></datalist>
+        </div>
+
+        <div class="field grow">
+            <label>Содержимое</label>
+            <textarea id="content" placeholder="Пиши статью здесь..." spellcheck="true"></textarea>
+        </div>
+
+        <div class="message" id="msg"></div>
+    </div>
+</div>
+
+<script type="module" src="article-edit.js"></script>
+</body>
+</html>

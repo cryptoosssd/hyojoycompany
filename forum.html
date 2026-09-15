@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Форум — HyoJoy</title>
+<link rel="stylesheet" href="forum.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <button class="back-btn" onclick="location.href='index.html'">Назад</button>
+</div>
+
+<div class="main">
+    <div class="tabs">
+        <button class="tab active" data-tab="general">Общий чат</button>
+        <button class="tab" data-tab="private">Личные</button>
+    </div>
+
+    <!-- ===== ОБЩИЙ ЧАТ ===== -->
+    <div class="panel active" id="panel-general">
+        <div class="pinned-bar" id="general-pinned"></div>
+        <div class="chat" id="general-messages"></div>
+        <div class="composer-wrap">
+            <div class="reply-preview" id="general-reply-preview">
+                <div class="reply-info">
+                    <div class="reply-nick" id="general-reply-nick">—</div>
+                    <div class="reply-text" id="general-reply-text">—</div>
+                </div>
+                <button class="reply-cancel" id="general-reply-cancel">Отмена</button>
+            </div>
+            <div class="composer">
+                <input type="text" id="general-input" placeholder="Написать сообщение..." maxlength="1000">
+                <button class="send-btn" id="general-send">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ЛИЧНЫЕ ===== -->
+    <div class="panel" id="panel-private">
+        <div class="dm-layout">
+            <div class="dm-users">
+                <div class="dm-users-head">
+                    <input type="text" id="dm-search" placeholder="Поиск по нику или тегу..." autocomplete="off">
+                </div>
+                <div id="dm-users-list"></div>
+            </div>
+            <div class="dm-chat">
+                <div class="dm-head" id="dm-head">
+                    <button class="dm-back" id="dm-back" style="display:none;">← Назад</button>
+                    <span id="dm-head-text">Выберите собеседника</span>
+                </div>
+                <div class="chat" id="dm-messages">
+                    <div class="empty-chat">Найдите пользователя и нажмите «Написать»</div>
+                </div>
+                <div class="composer-wrap">
+                    <div class="reply-preview" id="dm-reply-preview">
+                        <div class="reply-info">
+                            <div class="reply-nick" id="dm-reply-nick">—</div>
+                            <div class="reply-text" id="dm-reply-text">—</div>
+                        </div>
+                        <button class="reply-cancel" id="dm-reply-cancel">Отмена</button>
+                    </div>
+                    <div class="composer" id="dm-composer" style="display:none;">
+                        <input type="text" id="dm-input" placeholder="Написать сообщение..." maxlength="1000">
+                        <button class="send-btn" id="dm-send">Отправить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="forum.js"></script>
+</body>
+</html>

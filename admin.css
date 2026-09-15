@@ -1,0 +1,557 @@
+:root {
+    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
+    --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
+    --border: #3a3a3a; --border-hover: #555555;
+    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
+    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
+    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
+    --accent: #a0c4ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ===== Логин ===== */
+.login-screen {
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh;
+}
+.login-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 40px;
+    width: 360px;
+}
+.login-logo {
+    color: var(--text-strong);
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.input-group { margin-bottom: 16px; }
+.input-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.input-group input {
+    width: 100%;
+    padding: 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+}
+.input-group input:focus { border-color: var(--border-hover); }
+.login-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--bg-active);
+    border: 1px solid var(--border-hover);
+    color: var(--text-strong);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.15s;
+}
+.login-btn:hover { background: var(--bg-hover); }
+
+/* ===== Панель ===== */
+.header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 30px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.logo {
+    color: var(--text-strong);
+    font-size: 18px; letter-spacing: 3px;
+    text-transform: uppercase; font-weight: bold;
+    cursor: pointer;
+}
+.header-right { display: flex; gap: 16px; align-items: center; }
+.hint { font-size: 12px; color: var(--text-muted); }
+.back-btn {
+    background: none;
+    border: 1px solid var(--border-hover);
+    color: var(--text);
+    padding: 8px 16px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+.back-btn:hover { background: var(--bg-hover); }
+
+.main {
+    padding: 40px;
+    max-width: 1200px; margin: 0 auto;
+}
+.panel-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 30px;
+    gap: 20px;
+}
+.panel-head h1 {
+    font-size: 24px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-strong);
+}
+.search-wrap input {
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    width: 320px;
+}
+.search-wrap input:focus { border-color: var(--border-hover); }
+
+/* ===== Список юзеров ===== */
+.users-list { display: flex; flex-direction: column; gap: 10px; }
+.user-row {
+    display: grid;
+    grid-template-columns: 56px 1fr auto auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    transition: 0.15s;
+    cursor: pointer;
+}
+.user-row:hover { background: var(--bg-hover); border-color: var(--border-hover); }
+
+.row-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--bg-active);
+    border: 1px solid var(--border-hover);
+    color: var(--text-strong);
+    font-size: 16px; font-weight: bold;
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden;
+    text-transform: uppercase;
+}
+.row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.row-info { min-width: 0; }
+.row-nick {
+    font-size: 15px; color: var(--text-strong); font-weight: bold;
+    display: flex; align-items: center; gap: 6px;
+}
+.row-nick .verified-icon {
+    display: inline-flex;
+    width: 16px; height: 16px;
+}
+.row-nick .verified-icon svg {
+    width: 100%; height: 100%;
+}
+.row-status {
+    font-size: 12px;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+}
+.row-tag {
+    font-size: 11px; color: var(--text-muted);
+    font-family: monospace;
+    margin-top: 3px;
+}
+
+.row-badge {
+    padding: 4px 10px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid;
+}
+.row-badge.admin { color: var(--accent); border-color: var(--accent); }
+.row-badge.regular { color: var(--text-muted); border-color: var(--border); }
+
+.row-balance {
+    font-size: 13px;
+    color: var(--success);
+    text-align: right;
+    font-family: monospace;
+}
+.row-shares {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.empty {
+    padding: 60px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* ===== Модалка ===== */
+.modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.modal.open { display: flex; }
+.modal-content {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-hover);
+    width: 520px;
+    max-width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-input);
+    position: sticky; top: 0;
+}
+.modal-title {
+    font-size: 14px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-strong);
+}
+.modal-close {
+    background: none; border: none;
+    color: var(--text-dim); font-size: 26px;
+    line-height: 1; cursor: pointer;
+    padding: 0 8px;
+}
+.modal-close:hover { color: var(--danger); }
+
+.modal-body { padding: 20px; }
+
+.user-preview {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+.avatar-preview {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--bg-active);
+    border: 1px solid var(--border-hover);
+    color: var(--text-strong);
+    font-size: 22px; font-weight: bold;
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden;
+    text-transform: uppercase;
+}
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.nick-display {
+    font-size: 16px; color: var(--text-strong); font-weight: bold;
+}
+.tag-display {
+    font-size: 11px; color: var(--text-muted);
+    font-family: monospace; margin-top: 2px;
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.field input[type="text"],
+.field input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+}
+.field input[type="text"]:focus,
+.field input[type="number"]:focus { border-color: var(--border-hover); }
+
+.color-row {
+    display: flex; align-items: center; gap: 12px;
+}
+.color-row input[type="color"] {
+    width: 60px; height: 40px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    cursor: pointer;
+    padding: 2px;
+}
+.color-row span {
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.checkbox-field label {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 14px;
+    color: var(--text);
+}
+.checkbox-field input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--success);
+    cursor: pointer;
+}
+
+.actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+}
+.btn-save, .btn-delete {
+    padding: 14px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid;
+    transition: 0.15s;
+}
+.btn-save {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success-border);
+}
+.btn-save:hover { background: #2a4a2a; }
+.btn-delete {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger-border);
+}
+.btn-delete:hover { background: #4a2020; }
+
+.message {
+    margin-top: 14px;
+    padding: 12px;
+    font-size: 13px;
+    text-align: center;
+    display: none;
+    border: 1px solid;
+}
+.message.error { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); display: block; }
+.message.success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); display: block; }
+
+@media (max-width: 700px) {
+    .main { padding: 20px; }
+    .user-row { grid-template-columns: 44px 1fr auto; gap: 10px; }
+    .row-balance, .row-shares, .row-badge { display: none; }
+    .panel-head { flex-direction: column; align-items: stretch; }
+    .search-wrap input { width: 100%; }
+}
+/* ===== Табы админки ===== */
+.tabs {
+    display: flex;
+    gap: 0;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 30px;
+}
+.tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    padding: 14px 24px;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.tab:hover { color: var(--text-strong); }
+.tab.active {
+    color: var(--text-strong);
+    border-bottom-color: var(--success);
+}
+
+/* Панели */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ===== Кнопка "Добавить товар" ===== */
+.new-article-btn {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success);
+    padding: 12px 22px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.15s;
+    font-weight: bold;
+}
+.new-article-btn:hover {
+    background: #2a4a2a;
+    color: #aaffaa;
+    border-color: var(--success);
+}
+
+/* ===== Список товаров ===== */
+.products-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+.product-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 16px;
+    cursor: pointer;
+    transition: 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.product-card:hover { border-color: var(--border-hover); background: var(--bg-hover); }
+
+.product-img {
+    width: 100%;
+    height: 180px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+.product-img img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+.product-img.no-img { color: var(--text-muted); font-size: 13px; letter-spacing: 2px; }
+
+.product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.product-name {
+    color: var(--text-strong);
+    font-size: 15px;
+    font-weight: bold;
+}
+.product-price {
+    color: var(--success);
+    font-size: 16px;
+    font-family: monospace;
+}
+.product-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ===== Форма товара ===== */
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.field textarea {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    font-family: Arial, sans-serif;
+    resize: vertical;
+    min-height: 100px;
+}
+.field textarea:focus { border-color: var(--border-hover); }
+
+.image-block {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+.image-preview {
+    width: 120px; height: 120px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 28px;
+    flex-shrink: 0;
+}
+.image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.image-actions {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.image-actions button {
+    background: var(--bg-active);
+    border: 1px solid var(--border-hover);
+    color: var(--text-strong);
+    padding: 12px 16px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.image-actions button:hover { background: var(--bg-hover); }
+.image-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+}
+.api-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    max-width: 600px;
+}
+.api-card .field input {
+    width: 100%;
+    padding: 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+.api-card .field input:focus { border-color: var(--border-hover); }
+.field-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+}

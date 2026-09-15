@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Корзина — HyoJoy</title>
+<style>
+:root {
+    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
+    --bg-input-focus: #242424; --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
+    --border: #3a3a3a; --border-hover: #555555;
+    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
+    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
+    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+.header {
+    background: var(--bg-panel); border-bottom: 1px solid var(--border);
+    padding: 14px 30px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.logo { color: var(--text-strong); font-size: 18px; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; cursor: pointer; }
+.back-btn {
+    background: none; border: 1px solid var(--border-hover); color: var(--text);
+    padding: 8px 16px; font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: 0.2s;
+}
+.back-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
+
+.main { flex: 1; padding: 60px 40px; max-width: 900px; margin: 0 auto; width: 100%; }
+h1 { font-size: 32px; color: var(--text-strong); margin-bottom: 40px; font-weight: 300; letter-spacing: -0.5px; }
+
+.empty { text-align: center; padding: 80px 0; color: var(--text-muted); font-size: 16px; letter-spacing: 1px; }
+
+.item {
+    display: grid; grid-template-columns: 100px 1fr auto auto; gap: 20px;
+    align-items: center; padding: 20px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    margin-bottom: 12px;
+}
+.item img { width: 100px; height: 100px; object-fit: contain; background: var(--bg-input); }
+.item .no-img { width: 100px; height: 100px; background: var(--bg-input); border: 1px solid var(--border); }
+.item .name { font-size: 16px; color: var(--text-strong); }
+.item .unit { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+.qty {
+    display: flex; align-items: center;
+    border: 1px solid var(--border);
+}
+.qty button {
+    background: none; border: none; color: var(--text);
+    width: 32px; height: 32px; font-size: 18px; cursor: pointer;
+    transition: 0.2s;
+}
+.qty button:hover { background: var(--bg-hover); color: var(--text-strong); }
+.qty span { padding: 0 12px; font-size: 14px; min-width: 30px; text-align: center; }
+
+.item .total { font-size: 18px; color: var(--text-strong); min-width: 100px; text-align: right; }
+
+.remove-btn {
+    background: none; border: none; color: var(--danger);
+    font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; padding: 6px 10px; margin-top: 8px;
+    transition: 0.2s;
+}
+.remove-btn:hover { background: var(--danger-bg); }
+
+.summary {
+    margin-top: 30px; padding: 24px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.summary .label { font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+.summary .total { font-size: 32px; color: var(--text-strong); font-weight: 300; }
+
+.checkout-btn {
+    margin-top: 20px; width: 100%; padding: 20px;
+    background: var(--bg-active); border: 1px solid var(--border-hover);
+    color: var(--text-strong); font-size: 14px; letter-spacing: 2px;
+    text-transform: uppercase; cursor: pointer; transition: 0.2s;
+}
+.checkout-btn:hover { background: var(--bg-hover); }
+.checkout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div>
+        <button class="back-btn" onclick="location.href='store.html'">В магазин</button>
+        <button class="back-btn" onclick="location.href='index.html'">Главная</button>
+    </div>
+</div>
+
+<div class="main">
+    <h1 id="cart-title">Корзина</h1>
+    <div id="content"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+    getFirestore, collection, getDocs, addDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+    initSettings, loadSettings, formatPrice,
+    getCart, setCartQty, removeFromCart
+} from './common.js';
+
+initSettings();
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCUSTTJhonzZPOKWUbe_qMZfMmVyFSxjPE",
+    authDomain: "hyojoy-41840.firebaseapp.com",
+    projectId: "hyojoy-41840",
+    storageBucket: "hyojoy-41840.firebasestorage.app",
+    messagingSenderId: "714253431446",
+    appId: "1:714253431446:web:fe08e2cbe51c768dfd48b7",
+    measurementId: "G-DQ3F2VMTCJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let productsCache = {};
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = 'auth.html';
+        return;
+    }
+    currentUser = user;
+    await loadProducts();
+    render();
+});
+
+async function loadProducts() {
+    try {
+        const snap = await getDocs(collection(db, 'products'));
+        productsCache = {};
+        snap.forEach((d) => productsCache[d.id] = { id: d.id, ...d.data() });
+    } catch (e) {
+        console.error('loadProducts:', e);
+    }
+}
+
+function render() {
+    const settings = loadSettings();
+    const lang = settings.lang;
+
+    document.getElementById('cart-title').textContent = 'Корзина';
+
+    const cart = getCart();
+    const content = document.getElementById('content');
+
+    const ids = Object.keys(cart).filter((id) => cart[id] > 0);
+    if (ids.length === 0) {
+        content.innerHTML = `<div class="empty">Корзина пуста</div>`;
+        return;
+    }
+
+    let html = '';
+    let total = 0;
+
+    ids.forEach((id) => {
+        const p = productsCache[id];
+        if (!p) return;
+        const qty = cart[id];
+        const price = Number(p.price || 0);
+        const sum = price * qty;
+        total += sum;
+
+        const imgHtml = p.image
+            ? `<img src="${p.image}" alt="">`
+            : `<div class="no-img"></div>`;
+
+        html += `
+            <div class="item" data-id="${id}">
+                ${imgHtml}
+                <div>
+                    <div class="name">${escapeHtml(p.title || 'Без названия')}</div>
+                    <div class="unit">${formatPrice(price, lang)}</div>
+                    <button class="remove-btn" data-remove="${id}">Удалить</button>
+                </div>
+                <div class="qty">
+                    <button data-minus="${id}">−</button>
+                    <span>${qty}</span>
+                    <button data-plus="${id}">+</button>
+                </div>
+                <div class="total">${formatPrice(sum, lang)}</div>
+            </div>
+        `;
+    });
+
+    html += `
+        <div class="summary">
+            <div class="label">Итого</div>
+            <div class="total">${formatPrice(total, lang)}</div>
+        </div>
+        <button class="checkout-btn" id="checkout-btn">Оформить заказ</button>
+    `;
+
+    content.innerHTML = html;
+
+    content.querySelectorAll('[data-minus]').forEach((b) => {
+        b.addEventListener('click', () => {
+            const id = b.dataset.minus;
+            const c = getCart();
+            setCartQty(id, (c[id] || 0) - 1);
+            render();
+        });
+    });
+    content.querySelectorAll('[data-plus]').forEach((b) => {
+        b.addEventListener('click', () => {
+            const id = b.dataset.plus;
+            const c = getCart();
+            setCartQty(id, (c[id] || 0) + 1);
+            render();
+        });
+    });
+    content.querySelectorAll('[data-remove]').forEach((b) => {
+        b.addEventListener('click', () => {
+            removeFromCart(b.dataset.remove);
+            render();
+        });
+    });
+
+    const checkoutBtn = document.getElementById('checkout-btn');
+    checkoutBtn.addEventListener('click', () => checkout(lang));
+}
+
+async function checkout(lang) {
+    if (!currentUser) return;
+    if (!confirm('Оформить заказ?')) return;
+
+    const btn = document.getElementById('checkout-btn');
+    btn.disabled = true;
+    btn.textContent = 'Отправка...';
+
+    try {
+        const cart = getCart();
+        const items = [];
+        let total = 0;
+
+        Object.keys(cart).forEach((id) => {
+            const p = productsCache[id];
+            if (!p) return;
+            const qty = cart[id];
+            const price = Number(p.price || 0);
+            const sum = price * qty;
+            total += sum;
+            items.push({
+                id: p.id,
+                title: p.title || 'Без названия',
+                qty,
+                priceUsd: price,
+                sumUsd: sum
+            });
+        });
+
+        const nick = currentUser.displayName || currentUser.email.split('@')[0];
+        const tag = currentUser.uid.slice(0, 8);
+
+        await addDoc(collection(db, 'sales'), {
+            buyerUid: currentUser.uid,
+            buyerNick: nick,
+            buyerTag: tag,
+            items,
+            total,
+            ts: serverTimestamp()
+        });
+
+        localStorage.removeItem('hyojoy_cart');
+        alert('Заказ оформлен! Спасибо за покупку.');
+        window.location.href = 'company.html';
+    } catch (e) {
+        console.error(e);
+        alert('Ошибка: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Оформить заказ';
+    }
+}
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>

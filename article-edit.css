@@ -1,0 +1,85 @@
+:root {
+    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
+    --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
+    --border: #3a3a3a; --border-hover: #555555;
+    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
+    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
+    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+.header {
+    background: var(--bg-panel); border-bottom: 1px solid var(--border);
+    padding: 14px 30px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.logo {
+    color: var(--text-strong); font-size: 18px; letter-spacing: 3px;
+    text-transform: uppercase; font-weight: bold; cursor: pointer;
+}
+.header-right { display: flex; gap: 8px; }
+.back-btn {
+    background: none; border: 1px solid var(--border-hover); color: var(--text);
+    padding: 9px 16px; font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: 0.2s;
+}
+.back-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
+.back-btn.primary {
+    background: var(--success-bg); color: var(--success);
+    border-color: var(--success-border);
+}
+.back-btn.primary:hover { background: #2a4a2a; }
+.back-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.main { flex: 1; padding: 30px 40px; max-width: 900px; width: 100%; margin: 0 auto; }
+.editor { display: flex; flex-direction: column; gap: 20px; height: 100%; }
+.editor-head h1 {
+    font-size: 24px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-strong); margin-bottom: 10px;
+}
+.editor-hint {
+    font-size: 12px; color: var(--text-muted); line-height: 1.7;
+}
+.editor-hint code {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    padding: 2px 6px; font-family: monospace; font-size: 11px;
+    color: var(--success);
+}
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field.grow { flex: 1; min-height: 400px; }
+.field label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim);
+}
+.field input, .field textarea {
+    width: 100%; padding: 14px;
+    background: var(--bg-input); border: 1px solid var(--border);
+    color: var(--text); font-size: 15px; outline: none;
+    font-family: Arial, sans-serif;
+}
+.field textarea {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 14px; line-height: 1.6;
+    resize: vertical;
+    min-height: 400px;
+}
+.field input:focus, .field textarea:focus {
+    border-color: var(--border-hover); background: var(--bg-input-focus, #242424);
+}
+
+.message {
+    display: none;
+    padding: 12px;
+    font-size: 13px;
+    text-align: center;
+    border: 1px solid;
+}
+.message.error { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); display: block; }
+.message.success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); display: block; }
+
+@media (max-width: 600px) {
+    .main { padding: 20px; }
+    .editor-head h1 { font-size: 18px; }
+}

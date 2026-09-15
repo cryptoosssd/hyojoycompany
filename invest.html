@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Инвестиции — HyoJoy</title>
+<link rel="stylesheet" href="invest.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div class="header-right">
+        <span class="status" id="status">Загрузка...</span>
+        <button class="back-btn" onclick="location.href='index.html'">Назад</button>
+    </div>
+</div>
+
+<div class="main">
+
+    <div class="ticker-card">
+        <div class="ticker-head">
+            <div class="ticker-title">
+                <div class="symbol">HYOJ</div>
+                <div class="name">HyoJoy Corporation</div>
+            </div>
+            <div class="market-status" id="market-status">LIVE</div>
+        </div>
+
+        <div class="price-row">
+            <div class="price" id="price">$500.00</div>
+            <div class="change" id="change">+0.00%</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">За 24ч макс</div>
+                <div class="stat-value" id="high">$0.00</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">За 24ч мин</div>
+                <div class="stat-value" id="low">$0.00</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Капитализация</div>
+                <div class="stat-value" id="marketcap">$0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Акций в обороте</div>
+                <div class="stat-value" id="shares-out">20 000 000</div>
+            </div>
+        </div>
+
+        <div class="tf-bar">
+            <button class="tf-btn active" data-tf="1m">1м</button>
+            <button class="tf-btn" data-tf="1h">1ч</button>
+            <button class="tf-btn" data-tf="1d">1д</button>
+            <button class="tf-btn" data-tf="1w">1н</button>
+            <button class="tf-btn" data-tf="1M">1мес</button>
+            <button class="tf-btn" data-tf="1y">1г</button>
+        </div>
+
+        <div class="chart-wrap">
+            <canvas id="chart"></canvas>
+        </div>
+
+        <div class="updated">Обновлено: <span id="updated">—</span></div>
+    </div>
+
+    <!-- ===== ПАНЕЛЬ ТОРГОВЛИ ===== -->
+    <div class="trade-card">
+        <div class="trade-head">Торговля акциями</div>
+
+        <div class="trade-balance">
+            <div class="bal-item">
+                <div class="bal-label">Баланс</div>
+                <div class="bal-value" id="user-balance">$0.00</div>
+            </div>
+            <div class="bal-item">
+                <div class="bal-label">Акций HYOJ</div>
+                <div class="bal-value" id="user-shares">0</div>
+            </div>
+            <div class="bal-item">
+                <div class="bal-label">Стоимость портфеля</div>
+                <div class="bal-value" id="portfolio-value">$0.00</div>
+            </div>
+        </div>
+
+        <div class="trade-form">
+            <div class="input-group">
+                <label>Количество акций</label>
+                <input type="number" id="trade-qty" min="1" step="1" value="1">
+            </div>
+            <div class="trade-buttons">
+                <button class="buy-btn" id="buy-btn">Купить</button>
+                <button class="sell-btn" id="sell-btn">Продать</button>
+            </div>
+            <div class="trade-cost" id="trade-cost">Итого: $0.00</div>
+            <div class="message" id="trade-msg"></div>
+        </div>
+
+        <div class="trade-note">
+            <div>Сделки влияют на цену:</div>
+            <div>покупка толкает курс вверх, продажа — вниз.</div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module" src="invest.js"></script>
+</body>
+</html>

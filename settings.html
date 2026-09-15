@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Настройки — HyoJoy</title>
+<style>
+:root {
+    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
+    --bg-input-focus: #242424; --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
+    --border: #3a3a3a; --border-hover: #555555;
+    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
+    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
+    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: 0.2s; }
+
+.header {
+    background: var(--bg-panel); border-bottom: 1px solid var(--border);
+    padding: 14px 30px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.logo { color: var(--text-strong); font-size: 18px; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; cursor: pointer; }
+.back-btn {
+    background: none; border: 1px solid var(--border-hover); color: var(--text);
+    padding: 8px 16px; font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: 0.2s;
+}
+.back-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
+
+.main { flex: 1; padding: 50px 40px; display: flex; justify-content: center; }
+.panel { width: 560px; }
+h1 { font-size: 22px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-strong); margin-bottom: 30px; }
+h2 {
+    font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.section { margin-bottom: 40px; }
+
+.themes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.theme-card {
+    background: var(--bg-input); border: 1px solid var(--border);
+    padding: 14px 10px; cursor: pointer; transition: 0.2s;
+    text-align: center; color: var(--text);
+    font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+}
+.theme-card:hover { background: var(--bg-hover); border-color: var(--border-hover); }
+.theme-card.active { border-color: var(--border-hover); background: var(--bg-active); color: var(--text-strong); }
+
+.theme-preview { width: 100%; height: 40px; margin-bottom: 10px; display: flex; }
+.theme-preview span { flex: 1; }
+
+.langs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.lang-card {
+    background: var(--bg-input); border: 1px solid var(--border);
+    padding: 16px 14px; cursor: pointer; transition: 0.2s;
+    color: var(--text); font-size: 13px; letter-spacing: 1px;
+}
+.lang-card:hover { background: var(--bg-hover); border-color: var(--border-hover); }
+.lang-card.active { border-color: var(--border-hover); background: var(--bg-active); color: var(--text-strong); }
+
+.reset-btn {
+    width: 100%; padding: 14px; background: transparent;
+    border: 1px solid var(--danger-border); color: var(--danger);
+    font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: 0.2s;
+}
+.reset-btn:hover { background: var(--danger-bg); }
+
+.saved-toast {
+    position: fixed; bottom: 30px; right: 30px;
+    background: var(--bg-panel); border: 1px solid var(--success-border);
+    color: var(--success); padding: 14px 24px;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0; pointer-events: none; transition: 0.3s;
+}
+.saved-toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <button class="back-btn" onclick="location.href='index.html'" data-i18n="settings.back">Назад</button>
+</div>
+
+<div class="main">
+    <div class="panel">
+        <h1 data-i18n="settings.title">Настройки</h1>
+
+        <div class="section">
+            <h2 data-i18n="settings.theme">Тема оформления</h2>
+            <div class="themes-grid" id="themes-grid"></div>
+        </div>
+
+        <div class="section">
+            <h2 data-i18n="settings.language">Язык</h2>
+            <div class="langs-grid" id="langs-grid"></div>
+        </div>
+
+        <button class="reset-btn" id="reset-btn" data-i18n="settings.reset">Сбросить настройки</button>
+    </div>
+</div>
+
+<div class="saved-toast" id="toast" data-i18n="settings.saved">Сохранено</div>
+
+<script type="module">
+import {
+    THEMES, LANGS, loadSettings, saveSettings,
+    applyTheme, applyLang, initSettings
+} from './common.js';
+
+initSettings();
+
+const state = loadSettings();
+const themesGrid = document.getElementById('themes-grid');
+const langsGrid = document.getElementById('langs-grid');
+const toast = document.getElementById('toast');
+
+function showToast() {
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1200);
+}
+
+function renderThemes() {
+    themesGrid.innerHTML = '';
+    for (const [key, theme] of Object.entries(THEMES)) {
+        const card = document.createElement('div');
+        card.className = 'theme-card' + (key === state.theme ? ' active' : '');
+        const preview = document.createElement('div');
+        preview.className = 'theme-preview';
+        ['--bg', '--bg-panel', '--bg-active'].forEach((v) => {
+            const s = document.createElement('span');
+            s.style.background = theme.vars[v];
+            preview.appendChild(s);
+        });
+        card.appendChild(preview);
+        card.appendChild(document.createTextNode(theme.name));
+        card.addEventListener('click', () => {
+            state.theme = key;
+            saveSettings(state);
+            applyTheme(key);
+            renderThemes();
+            showToast();
+        });
+        themesGrid.appendChild(card);
+    }
+}
+
+function renderLangs() {
+    langsGrid.innerHTML = '';
+    for (const [key, lang] of Object.entries(LANGS)) {
+        const card = document.createElement('div');
+        card.className = 'lang-card' + (key === state.lang ? ' active' : '');
+        card.textContent = lang.name;
+        card.addEventListener('click', () => {
+            state.lang = key;
+            saveSettings(state);
+            applyLang(key);
+            renderLangs();
+            showToast();
+        });
+        langsGrid.appendChild(card);
+    }
+}
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    state.theme = 'dark';
+    state.lang = 'ru';
+    saveSettings(state);
+    applyTheme('dark');
+    applyLang('ru');
+    renderThemes();
+    renderLangs();
+    showToast();
+});
+
+renderThemes();
+renderLangs();
+</script>
+</body>
+</html>

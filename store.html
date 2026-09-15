@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Магазин — HyoJoy</title>
+<style>
+:root {
+    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
+    --bg-input-focus: #242424; --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
+    --border: #3a3a3a; --border-hover: #555555;
+    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
+    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
+    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+.header {
+    background: var(--bg-panel); border-bottom: 1px solid var(--border);
+    padding: 14px 30px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.logo { color: var(--text-strong); font-size: 18px; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; cursor: pointer; }
+.back-btn {
+    background: none; border: 1px solid var(--border-hover); color: var(--text);
+    padding: 8px 16px; font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: 0.2s;
+    margin-right: 10px;
+}
+.back-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
+
+.main { flex: 1; padding: 60px 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+h1 { font-size: 42px; letter-spacing: -1px; color: var(--text-strong); margin-bottom: 10px; font-weight: 300; }
+p.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 50px; letter-spacing: 1px; }
+
+.grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;
+}
+.card {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    padding: 30px 20px; text-align: center;
+    cursor: pointer; transition: 0.25s;
+    display: flex; flex-direction: column; align-items: center;
+}
+.card:hover { transform: translateY(-4px); border-color: var(--border-hover); }
+.card img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 24px; background: var(--bg-input); }
+.card h3 { font-size: 18px; color: var(--text-strong); margin-bottom: 8px; font-weight: 500; }
+.card .short { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; min-height: 32px; }
+.card .price { font-size: 22px; color: var(--text-strong); font-weight: 300; letter-spacing: 1px; }
+.card .stock-out {
+    font-size: 11px; color: var(--danger); letter-spacing: 2px;
+    text-transform: uppercase; margin-top: 10px;
+}
+
+.empty-store {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--text-muted);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    grid-column: 1 / -1;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div>
+        <button class="back-btn" onclick="location.href='index.html'">Назад</button>
+        <button class="back-btn" onclick="location.href='cart.html'">Корзина (<span id="cart-count">0</span>)</button>
+    </div>
+</div>
+
+<div class="main">
+    <h1>Магазин</h1>
+    <p class="subtitle">HyoJoy Store</p>
+    <div class="grid" id="grid"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initSettings, loadSettings, formatPrice, getCartCount } from './common.js';
+
+initSettings();
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCUSTTJhonzZPOKWUbe_qMZfMmVyFSxjPE",
+    authDomain: "hyojoy-41840.firebaseapp.com",
+    projectId: "hyojoy-41840",
+    storageBucket: "hyojoy-41840.firebasestorage.app",
+    messagingSenderId: "714253431446",
+    appId: "1:714253431446:web:fe08e2cbe51c768dfd48b7",
+    measurementId: "G-DQ3F2VMTCJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = 'auth.html';
+        return;
+    }
+    render();
+});
+
+async function render() {
+    const settings = loadSettings();
+    const lang = settings.lang;
+
+    document.getElementById('cart-count').textContent = getCartCount();
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '<div class="empty-store">Загрузка...</div>';
+
+    try {
+        let snap;
+        try {
+            snap = await getDocs(query(collection(db, 'products'), orderBy('createdAt', 'desc')));
+        } catch (e) {
+            // Если нет индекса или коллекция пустая
+            snap = await getDocs(collection(db, 'products'));
+        }
+
+        if (snap.empty) {
+            grid.innerHTML = '<div class="empty-store">Товаров пока нет</div>';
+            return;
+        }
+
+        const items = [];
+        snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+        // Сортировка: новые сверху
+        items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        grid.innerHTML = '';
+        items.forEach((p) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const inStock = Number(p.stock || 0) > 0;
+            card.innerHTML = `
+                ${p.image ? `<img src="${p.image}" alt="">` : ''}
+                <h3>${escapeHtml(p.title || 'Без названия')}</h3>
+                <div class="short">${escapeHtml(p.short || '')}</div>
+                <div class="price">${formatPrice(Number(p.price || 0), lang)}</div>
+                ${!inStock ? '<div class="stock-out">Нет в наличии</div>' : ''}
+            `;
+            card.addEventListener('click', () => {
+                window.location.href = 'product.html?id=' + p.id;
+            });
+            grid.appendChild(card);
+        });
+    } catch (e) {
+        console.error(e);
+        grid.innerHTML = '<div class="empty-store">Ошибка: ' + e.message + '</div>';
+    }
+}
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Админ-панель — HyoJoy</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ===== ВХОД ПО ПАРОЛЮ ===== -->
+<div class="login-screen" id="login-screen">
+    <div class="login-box">
+        <div class="login-logo">HyoJoy Admin</div>
+        <div class="input-group">
+            <label>Пароль администратора</label>
+            <input type="password" id="admin-pass" placeholder="••••••••" autocomplete="off">
+        </div>
+        <button class="login-btn" id="login-btn">Войти</button>
+        <div class="message" id="login-msg"></div>
+    </div>
+</div>
+
+<!-- ===== ПАНЕЛЬ ===== -->
+<div class="admin-panel" id="admin-panel" style="display:none;">
+    <div class="header">
+        <div class="logo" onclick="location.href='index.html'">HyoJoy Admin</div>
+        <div class="header-right">
+            <span class="hint">Пароль: <span id="pass-shown">—</span></span>
+            <button class="back-btn" id="logout-admin">Выйти</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="users">Аккаунты</button>
+        <button class="tab" data-tab="products">Товары</button>
+        <button class="tab" data-tab="api">API</button>
+    </div>
+
+    <!-- ===== ПАНЕЛЬ АККАУНТОВ ===== -->
+    <div class="main panel active" id="panel-users">
+        <div class="panel-head">
+            <h1>Управление аккаунтами</h1>
+            <div class="search-wrap">
+                <input type="text" id="search" placeholder="Поиск по нику или тегу...">
+            </div>
+        </div>
+        <div class="users-list" id="users-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- ===== ПАНЕЛЬ ТОВАРОВ ===== -->
+    <div class="main panel" id="panel-products">
+        <div class="panel-head">
+            <h1>Управление товарами</h1>
+            <button class="new-article-btn" id="new-product-btn">+ Добавить товар</button>
+        </div>
+        <div class="products-list" id="products-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- ===== ПАНЕЛЬ API ===== -->
+    <div class="main panel" id="panel-api">
+        <div class="panel-head">
+            <h1>API для инвестиций</h1>
+        </div>
+        <div class="api-card">
+            <div class="field">
+                <label>API-ключ</label>
+                <input type="text" id="api-key" placeholder="Вставь сюда свой API-ключ" autocomplete="off">
+                <div class="field-hint">
+                    Ключ хранится в Firestore (config/main). Пока никуда не используется — оставь тут для дальнейшей интеграции.
+                </div>
+            </div>
+            <div class="actions-row">
+                <button class="btn-save" id="api-save">Сохранить</button>
+                <button class="btn-delete" id="api-clear">Очистить</button>
+            </div>
+            <div class="message" id="api-msg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА АККАУНТА ===== -->
+<div class="modal" id="edit-modal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <div class="modal-title">Редактирование аккаунта</div>
+            <button class="modal-close" id="edit-close">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="user-preview">
+                <div class="avatar-preview" id="edit-avatar">?</div>
+                <div class="user-preview-info">
+                    <div class="nick-display" id="edit-nick">—</div>
+                    <div class="tag-display" id="edit-tag">—</div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Статус (под ником)</label>
+                <input type="text" id="edit-status" placeholder="Например: Owner, VIP, Модератор" maxlength="40">
+            </div>
+
+            <div class="field">
+                <label>Цвет статуса</label>
+                <div class="color-row">
+                    <input type="color" id="edit-status-color" value="#a0c4ff">
+                    <span id="edit-status-color-val">#a0c4ff</span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Цвет ника</label>
+                <div class="color-row">
+                    <input type="color" id="edit-nick-color" value="#ffffff">
+                    <span id="edit-nick-color-val">#ffffff</span>
+                </div>
+            </div>
+
+            <div class="field checkbox-field">
+                <label>
+                    <input type="checkbox" id="edit-verified">
+                    <span>Галочка возле ника (verified)</span>
+                </label>
+            </div>
+
+            <div class="field checkbox-field">
+                <label>
+                    <input type="checkbox" id="edit-admin">
+                    <span>Дать права администратора</span>
+                </label>
+            </div>
+
+            <div class="field">
+                <label>Баланс USD</label>
+                <input type="number" id="edit-balance" step="0.01">
+            </div>
+
+            <div class="field">
+                <label>Акций HYOJ</label>
+                <input type="number" id="edit-shares" step="1">
+            </div>
+
+            <div class="actions-row">
+                <button class="btn-save" id="edit-save">Сохранить</button>
+                <button class="btn-delete" id="edit-delete">Удалить аккаунт</button>
+            </div>
+
+            <div class="message" id="edit-msg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА ТОВАРА ===== -->
+<div class="modal" id="product-modal">
+    <div class="modal-content">
+        <div class="modal-head">
+            <div class="modal-title" id="product-modal-title">Новый товар</div>
+            <button class="modal-close" id="product-close">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="field">
+                <label>Название товара</label>
+                <input type="text" id="product-title" placeholder="Резиновые зубочистки" maxlength="120">
+            </div>
+
+            <div class="field">
+                <label>Краткое описание (на карточке)</label>
+                <input type="text" id="product-short" placeholder="Многоразовые, гибкие, безопасные" maxlength="200">
+            </div>
+
+            <div class="field">
+                <label>Полное описание</label>
+                <textarea id="product-desc" rows="6" placeholder="Что это за товар, из чего сделан, чем полезен..."></textarea>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label>Цена (USD)</label>
+                    <input type="number" id="product-price" step="0.01" min="0" value="1">
+                </div>
+                <div class="field">
+                    <label>В наличии (шт)</label>
+                    <input type="number" id="product-stock" step="1" min="0" value="100">
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Изображение (PNG / JPG)</label>
+                <div class="image-block">
+                    <div class="image-preview" id="product-image-preview">?</div>
+                    <div class="image-actions">
+                        <button type="button" id="product-pick-image">Выбрать файл</button>
+                        <div class="image-hint">PNG/JPG. Автоматически сожмётся до 400×400.</div>
+                    </div>
+                    <input type="file" id="product-image-input" accept="image/*" style="display:none;">
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button class="btn-save" id="product-save">Сохранить</button>
+                <button class="btn-delete" id="product-delete">Удалить</button>
+            </div>
+
+            <div class="message" id="product-msg"></div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>

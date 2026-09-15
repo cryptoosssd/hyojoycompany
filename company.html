@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Компания — HyoJoy</title>
+<link rel="stylesheet" href="company.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <button class="back-btn" onclick="location.href='index.html'">Назад</button>
+</div>
+
+<div class="main">
+
+    <div class="hero">
+        <div class="hero-symbol">HYOJ</div>
+        <h1>HyoJoy Corporation</h1>
+        <p class="hero-sub">Официальный профиль компании</p>
+    </div>
+
+    <div class="grid">
+
+        <div class="card">
+            <div class="card-label">Состояние компании</div>
+            <div class="card-value" id="capital">$0.00</div>
+            <div class="card-sub" id="capital-shares">20 000 000 акций</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Овнер</div>
+            <div class="card-value" id="owner-nick">Бибуп</div>
+            <div class="card-sub">
+                тег: <span class="tag" id="owner-tag">#--------</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Продано товаров</div>
+            <div class="card-value" id="total-sold">0</div>
+            <div class="card-sub">в реальном времени</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Выручка</div>
+            <div class="card-value" id="total-revenue">$0.00</div>
+            <div class="card-sub">за всё время</div>
+        </div>
+
+        <div class="card wide">
+            <div class="card-label">Последние продажи</div>
+            <div id="recent-sales" class="recent">
+                <div class="empty">Пока нет продаж</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module" src="company.js"></script>
+</body>
+</html>
