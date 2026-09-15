@@ -1,0 +1,175 @@
+:root {
+    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
+    --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
+    --border: #3a3a3a; --border-hover: #555555;
+    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
+    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
+    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
+    --warning: #ffcc88; --warning-bg: #3a2f1f; --warning-border: #554433;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+.header {
+    background: var(--bg-panel); border-bottom: 1px solid var(--border);
+    padding: 14px 30px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.logo { color: var(--text-strong); font-size: 18px; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; cursor: pointer; }
+.header-right { display: flex; gap: 10px; }
+.back-btn {
+    background: none; border: 1px solid var(--border-hover); color: var(--text);
+    padding: 8px 16px; font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: 0.2s;
+}
+.back-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
+
+.main { flex: 1; padding: 50px 40px; max-width: 1100px; margin: 0 auto; width: 100%; }
+h1 { font-size: 32px; color: var(--text-strong); font-weight: 300; letter-spacing: -0.5px; margin-bottom: 8px; }
+.subtitle { color: var(--text-muted); font-size: 13px; letter-spacing: 1px; margin-bottom: 40px; }
+h2 {
+    font-size: 16px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-strong); margin-bottom: 16px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* Полоска рынка */
+.market-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 30px;
+}
+.strip-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--success);
+    padding: 18px 22px;
+}
+.strip-label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 8px;
+}
+.strip-value {
+    font-size: 24px; font-weight: 300; color: var(--text-strong);
+}
+
+/* Создание ордера */
+.create-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 26px 30px;
+    margin-bottom: 40px;
+}
+.card-title {
+    font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 22px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted);
+}
+.form-group input, .form-group select {
+    padding: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    font-family: Arial, sans-serif;
+}
+.form-group input:focus, .form-group select:focus {
+    border-color: var(--border-hover);
+    background: #242424;
+}
+
+.create-btn {
+    width: 100%; padding: 16px;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success);
+    font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: 0.15s; font-weight: bold;
+}
+.create-btn:hover { background: #2a4a2a; color: #aaffaa; }
+.create-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.message {
+    margin-top: 14px;
+    padding: 12px;
+    font-size: 13px;
+    text-align: center;
+    display: none;
+    border: 1px solid;
+}
+.message.error { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); display: block; }
+.message.success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); display: block; }
+
+/* Список ордеров */
+.orders-section { margin-bottom: 40px; }
+.orders-list { display: flex; flex-direction: column; gap: 10px; }
+
+.order-row {
+    display: grid;
+    grid-template-columns: 130px 80px 120px 120px 1fr 120px;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    transition: 0.15s;
+}
+.order-row:hover { background: var(--bg-hover); }
+
+.order-type {
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    font-weight: bold; padding: 5px 10px; border: 1px solid;
+    text-align: center;
+}
+.order-type.buy { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
+.order-type.sell { color: var(--danger); border-color: var(--danger-border); background: var(--danger-bg); }
+.order-type.stop { color: var(--warning); border-color: var(--warning-border); background: var(--warning-bg); }
+
+.order-qty { color: var(--text-strong); font-size: 14px; }
+.order-price { color: var(--text); font-family: monospace; font-size: 13px; }
+.order-target { color: var(--text-strong); font-family: monospace; font-size: 13px; font-weight: bold; }
+.order-status {
+    font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+}
+.order-status.active { color: var(--success); }
+.order-status.done { color: var(--text-muted); }
+.order-status.cancelled { color: var(--danger); }
+
+.order-cancel {
+    background: none;
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    padding: 6px 12px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.order-cancel:hover { background: var(--danger-bg); }
+
+.empty {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-muted); font-size: 13px;
+    letter-spacing: 2px; text-transform: uppercase;
+}
+
+@media (max-width: 800px) {
+    .main { padding: 20px; }
+    .market-strip { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .order-row { grid-template-columns: 1fr; gap: 8px; }
+}

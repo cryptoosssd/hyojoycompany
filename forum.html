@@ -32,6 +32,7 @@
                 <button class="reply-cancel" id="general-reply-cancel">Отмена</button>
             </div>
             <div class="composer">
+                <button class="media-btn" type="button" data-scope="general" title="Прикрепить файл">📎</button>
                 <input type="text" id="general-input" placeholder="Написать сообщение..." maxlength="1000">
                 <button class="send-btn" id="general-send">Отправить</button>
             </div>
@@ -64,6 +65,7 @@
                         <button class="reply-cancel" id="dm-reply-cancel">Отмена</button>
                     </div>
                     <div class="composer" id="dm-composer" style="display:none;">
+                        <button class="media-btn" type="button" data-scope="dm" title="Прикрепить файл">📎</button>
                         <input type="text" id="dm-input" placeholder="Написать сообщение..." maxlength="1000">
                         <button class="send-btn" id="dm-send">Отправить</button>
                     </div>
@@ -73,6 +75,11 @@
     </div>
 </div>
 
+<!-- Один скрытый input для любого файла -->
+<input type="file" id="media-file-input" style="display:none;">
+<script type="module" src="notifications.js"></script>
+
 <script type="module" src="forum.js"></script>
+<script type="module" src="online.js"></script>
 </body>
 </html>

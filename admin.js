@@ -65,6 +65,8 @@ function tryLogin() {
             loadProducts();
             loadFiles();
             loadCompany();
+            loadDividends();
+            loadBonds();
             loadApiKey();
         }, 400);
     } else {
@@ -243,7 +245,7 @@ document.getElementById('edit-save').addEventListener('click', async () => {
 
 document.getElementById('edit-delete').addEventListener('click', async () => {
     if (!editingUid) return;
-    if (!confirm('Удалить аккаунт навсегда? Действие необратимо.')) return;
+    if (!confirm('Удалить аккаунт навсегда?')) return;
     const msg = document.getElementById('edit-msg');
     try {
         await deleteDoc(doc(db, 'users', editingUid));
@@ -346,11 +348,8 @@ function openProduct(id) {
     document.getElementById('product-stock').value = Number(p.stock || 0);
 
     const preview = document.getElementById('product-image-preview');
-    if (p.image) {
-        preview.innerHTML = `<img src="${p.image}" alt="">`;
-    } else {
-        preview.innerHTML = '?';
-    }
+    if (p.image) preview.innerHTML = `<img src="${p.image}" alt="">`;
+    else preview.innerHTML = '?';
 
     document.getElementById('product-msg').className = 'message';
     document.getElementById('product-delete').style.display = 'block';
@@ -425,16 +424,8 @@ document.getElementById('product-save').addEventListener('click', async () => {
     const price = Number(document.getElementById('product-price').value) || 0;
     const stock = Number(document.getElementById('product-stock').value) || 0;
 
-    if (!title) {
-        msg.className = 'message error';
-        msg.textContent = 'Введите название';
-        return;
-    }
-    if (price <= 0) {
-        msg.className = 'message error';
-        msg.textContent = 'Цена должна быть больше нуля';
-        return;
-    }
+    if (!title) { msg.className = 'message error'; msg.textContent = 'Введите название'; return; }
+    if (price <= 0) { msg.className = 'message error'; msg.textContent = 'Цена должна быть больше нуля'; return; }
 
     btn.disabled = true;
     try {
@@ -580,7 +571,6 @@ document.getElementById('file-pick').addEventListener('click', () => {
 document.getElementById('file-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (file.size > 700 * 1024) {
         const msg = document.getElementById('file-msg');
         msg.className = 'message error';
@@ -588,7 +578,6 @@ document.getElementById('file-input').addEventListener('change', (e) => {
         e.target.value = '';
         return;
     }
-
     const reader = new FileReader();
     reader.onload = () => {
         pendingFileData = reader.result.split(',')[1];
@@ -608,11 +597,7 @@ document.getElementById('file-save').addEventListener('click', async () => {
     const title = document.getElementById('file-title').value.trim();
     const description = document.getElementById('file-desc').value.trim();
 
-    if (!title) {
-        msg.className = 'message error';
-        msg.textContent = 'Введите название';
-        return;
-    }
+    if (!title) { msg.className = 'message error'; msg.textContent = 'Введите название'; return; }
 
     btn.disabled = true;
     try {
@@ -634,8 +619,7 @@ document.getElementById('file-save').addEventListener('click', async () => {
                 return;
             }
             await addDoc(collection(db, 'downloads'), {
-                title,
-                description,
+                title, description,
                 data: pendingFileData,
                 filename: pendingFileName,
                 size: Math.round(pendingFileData.length * 0.75),
@@ -685,9 +669,7 @@ async function loadCompany() {
             document.getElementById('company-title').value = 'HyoJoy Corporation';
             document.getElementById('company-desc').value = '';
         }
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 document.getElementById('company-save').addEventListener('click', async () => {
@@ -696,7 +678,6 @@ document.getElementById('company-save').addEventListener('click', async () => {
     const msg = document.getElementById('company-msg');
     const btn = document.getElementById('company-save');
     btn.disabled = true;
-
     try {
         await setDoc(doc(db, 'config', 'main'), {
             companyTitle: title,
@@ -711,6 +692,158 @@ document.getElementById('company-save').addEventListener('click', async () => {
         msg.textContent = 'Ошибка: ' + e.message;
     }
     btn.disabled = false;
+});
+
+// ============================================================
+// ДИВИДЕНДЫ
+// ============================================================
+async function loadDividends() {
+    try {
+        const snap = await getDoc(doc(db, 'config', 'main'));
+        if (snap.exists()) {
+            const d = snap.data();
+            document.getElementById('dividend-rate').value = ((d.dividendRate ?? 0.005) * 100).toFixed(2);
+            document.getElementById('dividend-enabled').checked = d.dividendEnabled !== false;
+        }
+    } catch (e) { console.error(e); }
+}
+
+document.getElementById('dividend-save').addEventListener('click', async () => {
+    const rate = parseFloat(document.getElementById('dividend-rate').value) / 100;
+    const enabled = document.getElementById('dividend-enabled').checked;
+    const msg = document.getElementById('dividend-msg');
+    const btn = document.getElementById('dividend-save');
+    btn.disabled = true;
+    try {
+        await setDoc(doc(db, 'config', 'main'), {
+            dividendRate: rate,
+            dividendEnabled: enabled,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+        msg.className = 'message success';
+        msg.textContent = 'Сохранено';
+    } catch (e) {
+        msg.className = 'message error';
+        msg.textContent = 'Ошибка: ' + e.message;
+    }
+    btn.disabled = false;
+});
+
+// ============================================================
+// ОБЛИГАЦИИ
+// ============================================================
+let allAdminBonds = [];
+let editingBondId = null;
+
+async function loadBonds() {
+    const box = document.getElementById('admin-bonds-list');
+    if (!box) return;
+    box.innerHTML = '<div class="empty">Загрузка...</div>';
+    try {
+        const snap = await getDocs(collection(db, 'bonds'));
+        allAdminBonds = [];
+        snap.forEach((d) => allAdminBonds.push({ id: d.id, ...d.data() }));
+        renderBondsAdmin();
+    } catch (e) {
+        box.innerHTML = '<div class="empty">Ошибка: ' + e.message + '</div>';
+    }
+}
+
+function renderBondsAdmin() {
+    const box = document.getElementById('admin-bonds-list');
+    if (!allAdminBonds.length) {
+        box.innerHTML = '<div class="empty">Облигаций нет</div>';
+        return;
+    }
+    box.innerHTML = allAdminBonds.map((b) => `
+        <div class="file-row" data-id="${b.id}" style="cursor:pointer;">
+            <div class="file-row-icon">📜</div>
+            <div class="file-row-info">
+                <div class="file-row-title">${escapeHtml(b.name || 'Облигация')}</div>
+                <div class="file-row-desc">${b.price}$ · ${b.days} дн. · ${(b.rate * 100).toFixed(2)}%</div>
+            </div>
+            <div class="file-row-size">${b.available === false ? 'ОТКЛ' : 'АКТИВ'}</div>
+        </div>
+    `).join('');
+    box.querySelectorAll('.file-row').forEach((row) => {
+        row.addEventListener('click', () => openBondEdit(row.dataset.id));
+    });
+}
+
+document.getElementById('new-bond-btn').addEventListener('click', () => {
+    editingBondId = null;
+    document.getElementById('bond-modal-title').textContent = 'Новая облигация';
+    document.getElementById('bond-name').value = '';
+    document.getElementById('bond-price').value = '500';
+    document.getElementById('bond-days').value = '7';
+    document.getElementById('bond-rate').value = '5';
+    document.getElementById('bond-delete').style.display = 'none';
+    document.getElementById('bond-msg').className = 'message';
+    document.getElementById('bond-modal').classList.add('open');
+});
+
+function openBondEdit(id) {
+    const b = allAdminBonds.find((x) => x.id === id);
+    if (!b) return;
+    editingBondId = id;
+    document.getElementById('bond-modal-title').textContent = 'Редактирование';
+    document.getElementById('bond-name').value = b.name || '';
+    document.getElementById('bond-price').value = b.price || 500;
+    document.getElementById('bond-days').value = b.days || 7;
+    document.getElementById('bond-rate').value = ((b.rate || 0.05) * 100).toFixed(2);
+    document.getElementById('bond-delete').style.display = 'block';
+    document.getElementById('bond-msg').className = 'message';
+    document.getElementById('bond-modal').classList.add('open');
+}
+
+document.getElementById('bond-close').addEventListener('click', () => {
+    document.getElementById('bond-modal').classList.remove('open');
+    editingBondId = null;
+});
+
+document.getElementById('bond-save').addEventListener('click', async () => {
+    const name = document.getElementById('bond-name').value.trim();
+    const price = parseFloat(document.getElementById('bond-price').value);
+    const days = parseInt(document.getElementById('bond-days').value, 10);
+    const rate = parseFloat(document.getElementById('bond-rate').value) / 100;
+    const msg = document.getElementById('bond-msg');
+
+    if (!name || !price || !days || !rate) {
+        msg.className = 'message error';
+        msg.textContent = 'Заполни все поля';
+        return;
+    }
+
+    try {
+        if (editingBondId) {
+            await updateDoc(doc(db, 'bonds', editingBondId), { name, price, days, rate });
+        } else {
+            await addDoc(collection(db, 'bonds'), {
+                name, price, days, rate,
+                available: true,
+                createdAt: serverTimestamp()
+            });
+        }
+        msg.className = 'message success';
+        msg.textContent = 'Сохранено';
+        await loadBonds();
+        setTimeout(() => document.getElementById('bond-modal').classList.remove('open'), 600);
+    } catch (e) {
+        msg.className = 'message error';
+        msg.textContent = 'Ошибка: ' + e.message;
+    }
+});
+
+document.getElementById('bond-delete').addEventListener('click', async () => {
+    if (!editingBondId) return;
+    if (!confirm('Удалить облигацию?')) return;
+    try {
+        await deleteDoc(doc(db, 'bonds', editingBondId));
+        await loadBonds();
+        document.getElementById('bond-modal').classList.remove('open');
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
 });
 
 // ============================================================

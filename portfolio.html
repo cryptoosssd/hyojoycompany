@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Портфель — HyoJoy</title>
+<link rel="stylesheet" href="portfolio.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div class="header-right">
+        <button class="back-btn" onclick="location.href='invest.html'">К бирже</button>
+        <button class="back-btn" onclick="location.href='index.html'">Главная</button>
+    </div>
+</div>
+
+<div class="main">
+
+    <h1>Портфель</h1>
+    <p class="subtitle">Ваши активы и история сделок</p>
+
+    <div class="cards">
+        <div class="card">
+            <div class="card-label">Баланс USD</div>
+            <div class="card-value" id="balance">$0.00</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Акций HYOJ</div>
+            <div class="card-value" id="shares">0</div>
+            <div class="card-sub" id="shares-value">≈ $0.00</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Средняя цена покупки</div>
+            <div class="card-value" id="avg-price">$0.00</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Прибыль / убыток</div>
+            <div class="card-value" id="profit">$0.00</div>
+            <div class="card-sub" id="profit-pct">0.00%</div>
+        </div>
+    </div>
+
+    <div class="market-row">
+        <div class="market-label">Текущий курс HYOJ</div>
+        <div class="market-price" id="current-price">$0.00</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="trades">История сделок</button>
+        <button class="tab" data-tab="rich">Топ по капиталу</button>
+        <button class="tab" data-tab="traders">Топ трейдеров</button>
+    </div>
+
+    <div class="panel active" id="panel-trades">
+        <div class="trades-list" id="trades-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <div class="panel" id="panel-rich">
+        <div class="rating-list" id="rich-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <div class="panel" id="panel-traders">
+        <div class="rating-list" id="traders-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module" src="portfolio.js"></script>
+<script type="module" src="online.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ордера — HyoJoy</title>
+<link rel="stylesheet" href="orders.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div class="header-right">
+        <button class="back-btn" onclick="location.href='invest.html'">К бирже</button>
+        <button class="back-btn" onclick="location.href='portfolio.html'">Портфель</button>
+        <button class="back-btn" onclick="location.href='index.html'">Главная</button>
+    </div>
+</div>
+
+<div class="main">
+
+    <h1>Мои ордера</h1>
+    <p class="subtitle">Отложенные заявки на покупку и продажу</p>
+
+    <div class="market-strip">
+        <div class="strip-item">
+            <div class="strip-label">Текущий курс</div>
+            <div class="strip-value" id="current-price">$0.00</div>
+        </div>
+        <div class="strip-item">
+            <div class="strip-label">Твой баланс</div>
+            <div class="strip-value" id="user-balance">$0.00</div>
+        </div>
+        <div class="strip-item">
+            <div class="strip-label">Твои акции</div>
+            <div class="strip-value" id="user-shares">0</div>
+        </div>
+    </div>
+
+    <!-- Создать ордер -->
+    <div class="create-card">
+        <div class="card-title">Создать ордер</div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Тип</label>
+                <select id="order-type">
+                    <option value="limit_buy">Лимитная покупка</option>
+                    <option value="limit_sell">Лимитная продажа</option>
+                    <option value="stop_loss">Stop-loss (продать при падении)</option>
+                    <option value="take_profit">Take-profit (продать при росте)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Количество акций</label>
+                <input type="number" id="order-qty" min="1" step="1" value="1">
+            </div>
+            <div class="form-group">
+                <label>Целевая цена ($)</label>
+                <input type="number" id="order-price" min="1" step="0.01" value="500">
+            </div>
+        </div>
+
+        <button class="create-btn" id="create-btn">Создать ордер</button>
+        <div class="message" id="create-msg"></div>
+    </div>
+
+    <!-- Активные ордера -->
+    <div class="orders-section">
+        <h2>Активные ордера</h2>
+        <div class="orders-list" id="orders-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- История исполненных -->
+    <div class="orders-section">
+        <h2>Исполненные и отменённые</h2>
+        <div class="orders-list" id="history-list">
+            <div class="empty">Пока пусто</div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module" src="orders.js"></script>
+<script type="module" src="online.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лента — HyoJoy</title>
+<link rel="stylesheet" href="feed.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div class="header-right">
+        <span class="status" id="status">Загрузка...</span>
+        <button class="back-btn" onclick="location.href='profile.html'">Мой профиль</button>
+        <button class="back-btn" onclick="location.href='index.html'">Главная</button>
+    </div>
+</div>
+
+<div class="main">
+
+    <h1>Лента</h1>
+    <p class="subtitle">Свежие посты твоих подписок и твои собственные</p>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="feed">Лента</button>
+        <button class="tab" data-tab="all">Все посты</button>
+    </div>
+
+    <!-- ЛЕНТА -->
+    <div class="panel active" id="panel-feed">
+        <div class="feed-form" id="feed-form">
+            <textarea id="feed-input" placeholder="Что нового?" maxlength="1000"></textarea>
+            <button class="feed-send" id="feed-send">Опубликовать</button>
+            <div class="message" id="feed-msg"></div>
+        </div>
+
+        <div class="feed-list" id="feed-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- ВСЕ ПОСТЫ -->
+    <div class="panel" id="panel-all">
+        <div class="feed-list" id="all-list">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module" src="feed.js"></script>
+<script type="module" src="online.js"></script>
+</body>
+</html>
