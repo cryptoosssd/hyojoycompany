@@ -12,15 +12,18 @@
     <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
     <div class="header-right">
         <span class="status" id="status">Загрузка...</span>
+        <button class="back-btn" onclick="location.href='portfolio.html'">Портфель</button>
+        <button class="back-btn" onclick="location.href='orders.html'">Ордера</button>
         <button class="back-btn" onclick="location.href='index.html'">Назад</button>
     </div>
 </div>
 
 <div class="main">
 
+    <!-- КУРС -->
     <div class="ticker-card">
         <div class="ticker-head">
-            <div class="ticker-title">
+            <div>
                 <div class="symbol">HYOJ</div>
                 <div class="name">HyoJoy Corporation</div>
             </div>
@@ -34,11 +37,11 @@
 
         <div class="stats">
             <div class="stat">
-                <div class="stat-label">За 24ч макс</div>
+                <div class="stat-label">24ч макс</div>
                 <div class="stat-value" id="high">$0.00</div>
             </div>
             <div class="stat">
-                <div class="stat-label">За 24ч мин</div>
+                <div class="stat-label">24ч мин</div>
                 <div class="stat-value" id="low">$0.00</div>
             </div>
             <div class="stat">
@@ -46,8 +49,8 @@
                 <div class="stat-value" id="marketcap">$0</div>
             </div>
             <div class="stat">
-                <div class="stat-label">Акций в обороте</div>
-                <div class="stat-value" id="shares-out">20 000 000</div>
+                <div class="stat-label">В обороте</div>
+                <div class="stat-value" id="shares-remaining">20 000 000</div>
             </div>
         </div>
 
@@ -67,9 +70,9 @@
         <div class="updated">Обновлено: <span id="updated">—</span></div>
     </div>
 
-    <!-- ===== ПАНЕЛЬ ТОРГОВЛИ ===== -->
+    <!-- ТОРГОВЛЯ -->
     <div class="trade-card">
-        <div class="trade-head">Торговля акциями</div>
+        <div class="trade-head">Торговля</div>
 
         <div class="trade-balance">
             <div class="bal-item">
@@ -77,11 +80,11 @@
                 <div class="bal-value" id="user-balance">$0.00</div>
             </div>
             <div class="bal-item">
-                <div class="bal-label">Акций HYOJ</div>
+                <div class="bal-label">Акций</div>
                 <div class="bal-value" id="user-shares">0</div>
             </div>
             <div class="bal-item">
-                <div class="bal-label">Стоимость портфеля</div>
+                <div class="bal-label">Портфель</div>
                 <div class="bal-value" id="portfolio-value">$0.00</div>
             </div>
         </div>
@@ -98,15 +101,91 @@
             <div class="trade-cost" id="trade-cost">Итого: $0.00</div>
             <div class="message" id="trade-msg"></div>
         </div>
+    </div>
 
-        <div class="trade-note">
-            <div>Сделки влияют на цену:</div>
-            <div>покупка толкает курс вверх, продажа — вниз.</div>
+    <!-- СТАКАН -->
+    <div class="orderbook-card">
+        <div class="ob-head">
+            <div class="ob-title">Стакан заявок</div>
+            <div class="ob-spread" id="orderbook-spread">Спред: —</div>
+        </div>
+        <div class="ob-columns">
+            <div class="ob-col">
+                <div class="ob-col-title buy">Покупки</div>
+                <div id="orderbook-bids"><div class="ob-empty">—</div></div>
+            </div>
+            <div class="ob-col">
+                <div class="ob-col-title sell">Продажи</div>
+                <div id="orderbook-asks"><div class="ob-empty">—</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКИ -->
+    <div class="invest-tabs">
+        <button class="itab active" data-itab="dividends">Дивиденды</button>
+        <button class="itab" data-itab="bonds">Облигации</button>
+    </div>
+
+    <!-- ДИВИДЕНДЫ -->
+    <div class="ipanel active" id="ipanel-dividends">
+        <div class="dividend-card">
+            <div class="dv-head">
+                <div class="dv-title">Ежедневные дивиденды</div>
+                <div class="dv-status" id="dv-status">—</div>
+            </div>
+            <div class="dv-info">
+                <div class="dv-item">
+                    <div class="dv-label">Ставка</div>
+                    <div class="dv-value" id="dv-rate">0.5%</div>
+                </div>
+                <div class="dv-item">
+                    <div class="dv-label">Твои акции</div>
+                    <div class="dv-value" id="dv-shares">0</div>
+                </div>
+                <div class="dv-item">
+                    <div class="dv-label">Стоимость</div>
+                    <div class="dv-value" id="dv-value">$0.00</div>
+                </div>
+                <div class="dv-item">
+                    <div class="dv-label">Выплата в день</div>
+                    <div class="dv-value highlight" id="dv-daily">$0.00</div>
+                </div>
+            </div>
+            <button class="dv-claim" id="dv-claim">Получить дивиденды</button>
+            <div class="message" id="dv-msg"></div>
+        </div>
+
+        <div class="dv-history-section">
+            <h2>История выплат</h2>
+            <div class="dv-history" id="dv-history">
+                <div class="empty">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ОБЛИГАЦИИ -->
+    <div class="ipanel" id="ipanel-bonds">
+        <div class="bonds-section">
+            <h2>Доступные облигации</h2>
+            <div class="bonds-list" id="bonds-list">
+                <div class="empty">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="bonds-section">
+            <h2>Мои облигации</h2>
+            <div class="bonds-list" id="my-bonds-list">
+                <div class="empty">Пока нет</div>
+            </div>
         </div>
     </div>
 
 </div>
 
 <script type="module" src="invest.js"></script>
+<script type="module" src="orderbook.js"></script>
+<script type="module" src="dividends.js"></script>
+<script type="module" src="online.js"></script>
 </body>
 </html>

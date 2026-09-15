@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Хэштег — HyoJoy</title>
+<link rel="stylesheet" href="hashtag.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
+    <div class="header-right">
+        <button class="back-btn" onclick="history.back()">Назад</button>
+        <button class="back-btn" onclick="location.href='feed.html'">К ленте</button>
+    </div>
+</div>
+
+<div class="main">
+    <h1 id="page-title">#—</h1>
+    <p class="subtitle" id="post-count">Загрузка...</p>
+
+    <div class="posts-list" id="posts-list">
+        <div class="empty">Загрузка...</div>
+    </div>
+</div>
+
+<script type="module" src="hashtag.js"></script>
+<script type="module" src="online.js"></script>
+</body>
+</html>

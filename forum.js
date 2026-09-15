@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
     getFirestore, collection, addDoc, query, orderBy, limit,
-    onSnapshot, getDocs, doc, setDoc, updateDoc,
+    onSnapshot, getDocs, doc, setDoc, updateDoc, increment,
     serverTimestamp, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -22,16 +22,38 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const EMOJIS = ['👍', '❤️', '😂', '🔥', '😮', '😢', '👎'];
+const MAX_MEDIA_SIZE = 700 * 1024;
+const ENCRYPT_KEY = 'Hy0J0y-S3cr3t-K3y-2026';
 
+let currentMediaScope = null;
 let currentUser = null;
 let currentNick = '';
 let currentTag = '';
 let dmUnsub = null;
 let currentDMUser = null;
 let allUsers = [];
-let userData = {};   // uid -> { avatar, status, statusColor, nickColor, verified }
+let userData = {};
 let generalReply = null;
 let dmReply = null;
+
+// ===== Шифрование =====
+function xorCipher(str, key) {
+    let out = '';
+    for (let i = 0; i < str.length; i++) {
+        out += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return out;
+}
+function encryptString(str) {
+    const enc = xorCipher(str, ENCRYPT_KEY);
+    return btoa(unescape(encodeURIComponent(enc)));
+}
+function decryptString(b64) {
+    try {
+        const dec = decodeURIComponent(escape(atob(b64)));
+        return xorCipher(dec, ENCRYPT_KEY);
+    } catch (e) { return ''; }
+}
 
 // ===== Утилиты =====
 function escapeHtml(s) {
@@ -55,13 +77,11 @@ function avatarInner(uid, nick) {
     const ch = (nick || '?').charAt(0).toUpperCase();
     return escapeHtml(ch);
 }
-
 function verifiedSvg() {
     return `<svg viewBox="0 0 24 24" fill="#a0c4ff" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;vertical-align:-2px;">
         <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
     </svg>`;
 }
-
 function getNickStyle(uid) {
     const u = userData[uid] || {};
     if (u.nickColor) return `color:${u.nickColor}`;
@@ -75,6 +95,52 @@ function getStatusLine(uid) {
     if (!u.status) return '';
     const color = u.statusColor || '#a0c4ff';
     return `<div class="msg-status" style="color:${color}">${escapeHtml(u.status)}</div>`;
+}
+function goProfile(uid) {
+    if (uid) window.location.href = 'profile.html?id=' + uid;
+}
+
+// ===== Расшифровка файла =====
+function decryptFileFromMsg(msg) {
+    if (!msg.file || !msg.file.data) return null;
+    const f = msg.file;
+    if (f.encrypted) {
+        const decrypted = decryptString(f.data);
+        return { ...f, data: decrypted, encrypted: false };
+    }
+    return f;
+}
+function renderMediaBlock(msg) {
+    const f = decryptFileFromMsg(msg);
+    if (!f || !f.data) return '';
+    const sizeKB = Math.round((f.size || 0) / 1024);
+    const isImage = (f.type || '').startsWith('image/');
+    const isVideo = (f.type || '').startsWith('video/');
+    if (isImage) {
+        return `
+            <div class="msg-file">
+                <div class="msg-media"><img src="${f.data}" alt="${escapeHtml(f.name)}" data-viewer="image"></div>
+                <button class="file-download-btn">Скачать (${sizeKB} КБ)</button>
+            </div>`;
+    }
+    if (isVideo) {
+        return `
+            <div class="msg-file">
+                <div class="msg-media"><video src="${f.data}" controls></video></div>
+                <button class="file-download-btn">Скачать (${sizeKB} КБ)</button>
+            </div>`;
+    }
+    return `
+        <div class="msg-file">
+            <div class="msg-file-row">
+                <div class="msg-file-icon">📎</div>
+                <div class="msg-file-info">
+                    <div class="msg-file-name">${escapeHtml(f.name || 'файл')}</div>
+                    <div class="msg-file-size">${sizeKB} КБ</div>
+                </div>
+            </div>
+            <button class="file-download-btn">Скачать</button>
+        </div>`;
 }
 
 // ===== Табы =====
@@ -101,8 +167,7 @@ function renderMsg(container, msg, isOwn, scope, msgId, chatId) {
             <div class="msg-reply-quote">
                 <span class="quote-nick">${escapeHtml(msg.replyTo.nick)}</span>
                 <span class="quote-text">${escapeHtml(msg.replyTo.text || '')}</span>
-            </div>
-        `;
+            </div>`;
     }
 
     let reactionsHtml = '';
@@ -113,20 +178,19 @@ function renderMsg(container, msg, isOwn, scope, msgId, chatId) {
             const users = reactions[emoji] || [];
             const mine = users.includes(currentUser.uid);
             return `<div class="reaction-chip ${mine ? 'mine' : ''}" data-reaction="${emoji}">
-                <span>${emoji}</span>
-                <span class="count">${users.length}</span>
-            </div>`;
+                <span>${emoji}</span><span class="count">${users.length}</span></div>`;
         }).join('') + '</div>';
     }
 
     const pinned = msg.pinned === true;
+    const textBlock = msg.text ? `<div class="msg-text">${escapeHtml(msg.text)}</div>` : '';
 
     row.innerHTML = `
-        <div class="msg-avatar">${avatarInner(msg.uid, msg.nick)}</div>
+        <div class="msg-avatar profile-link" data-uid="${msg.uid}" style="cursor:pointer;">${avatarInner(msg.uid, msg.nick)}</div>
         <div class="msg ${pinned ? 'pinned' : ''}">
             ${replyQuote}
             <div class="msg-head">
-                <span class="msg-nick" style="${getNickStyle(msg.uid)}">
+                <span class="msg-nick profile-link" data-uid="${msg.uid}" style="${getNickStyle(msg.uid)};cursor:pointer;">
                     ${escapeHtml(msg.nick || '???')}
                     ${isVerified(msg.uid) ? verifiedSvg() : ''}
                 </span>
@@ -134,7 +198,8 @@ function renderMsg(container, msg, isOwn, scope, msgId, chatId) {
                 <span class="msg-time">${fmtTime(msg.ts)}</span>
             </div>
             ${getStatusLine(msg.uid)}
-            <div class="msg-text">${escapeHtml(msg.text)}</div>
+            ${textBlock}
+            ${renderMediaBlock(msg)}
             ${reactionsHtml}
             <div class="msg-actions">
                 <button class="msg-action-btn" data-action="reply">Ответить</button>
@@ -154,40 +219,50 @@ function renderMsg(container, msg, isOwn, scope, msgId, chatId) {
             toggleReaction(scope, chatId, msgId, chip.dataset.reaction);
         });
     });
-
     row.querySelector('[data-action="reply"]').addEventListener('click', (e) => {
         e.stopPropagation();
-        setReply(scope, { msgId, chatId, uid: msg.uid, nick: msg.nick || '???', text: msg.text });
+        setReply(scope, { msgId, chatId, uid: msg.uid, nick: msg.nick || '???', text: msg.text || '[файл]' });
     });
-
     row.querySelector('[data-action="react"]').addEventListener('click', (e) => {
         e.stopPropagation();
         openEmojiPicker(row.querySelector('.msg'), scope, chatId, msgId);
     });
-
     row.querySelector('[data-action="pin"]').addEventListener('click', (e) => {
         e.stopPropagation();
         togglePin(scope, chatId, msgId, !pinned);
     });
+    row.querySelectorAll('img[data-viewer="image"]').forEach((img) => {
+        img.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openMediaViewer(e.target.src);
+        });
+    });
+    row.querySelectorAll('.file-download-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            downloadAttachedFile(msg);
+        });
+    });
+
+    // Клик по нику/аватарке → профиль
+    row.querySelectorAll('.profile-link').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goProfile(el.dataset.uid);
+        });
+    });
 }
 
-// ===== Закрепить/открепить =====
+// ===== Закрепы =====
 async function togglePin(scope, chatId, msgId, pin) {
     try {
         let ref;
-        if (scope === 'general') {
-            ref = doc(db, 'forum_general', msgId);
-        } else {
-            ref = doc(db, 'forum_dm', chatId, 'messages', msgId);
-        }
+        if (scope === 'general') ref = doc(db, 'forum_general', msgId);
+        else ref = doc(db, 'forum_dm', chatId, 'messages', msgId);
         await updateDoc(ref, { pinned: pin });
-    } catch (e) {
-        console.error('togglePin failed:', e);
-        alert('Не удалось изменить закреп: ' + e.message);
-    }
+    } catch (e) { alert('Ошибка: ' + e.message); }
 }
 
-// ===== Панель закрепов (общий чат) =====
 function renderPinned(boxId, messages) {
     const box = document.getElementById(boxId);
     const pinned = messages.filter((m) => m.pinned === true);
@@ -201,10 +276,9 @@ function renderPinned(boxId, messages) {
         <div class="pinned-item" data-msg-id="${m.id}">
             <span class="pin-label">📌 Закреп</span>
             <span class="pin-nick">${escapeHtml(m.nick || '???')}:</span>
-            <span class="pin-text">${escapeHtml(m.text)}</span>
+            <span class="pin-text">${escapeHtml(m.text || '[файл]')}</span>
         </div>
     `).join('');
-
     box.querySelectorAll('.pinned-item').forEach((el) => {
         el.addEventListener('click', () => {
             const target = document.querySelector(`[data-msg-id="${el.dataset.msgId}"]`);
@@ -227,7 +301,6 @@ function openEmojiPicker(container, scope, chatId, msgId) {
     picker.className = 'emoji-picker';
     picker.innerHTML = EMOJIS.map((e) => `<button data-emoji="${e}">${e}</button>`).join('');
     container.appendChild(picker);
-
     picker.querySelectorAll('button').forEach((btn) => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -235,7 +308,6 @@ function openEmojiPicker(container, scope, chatId, msgId) {
             picker.remove();
         });
     });
-
     setTimeout(() => {
         const closeHandler = (ev) => {
             if (!picker.contains(ev.target)) {
@@ -251,24 +323,13 @@ function openEmojiPicker(container, scope, chatId, msgId) {
 async function toggleReaction(scope, chatId, msgId, emoji) {
     try {
         let ref;
-        if (scope === 'general') {
-            ref = doc(db, 'forum_general', msgId);
-        } else {
-            ref = doc(db, 'forum_dm', chatId, 'messages', msgId);
-        }
-
+        if (scope === 'general') ref = doc(db, 'forum_general', msgId);
+        else ref = doc(db, 'forum_dm', chatId, 'messages', msgId);
         const chip = document.querySelector(`[data-msg-id="${msgId}"] .reaction-chip[data-reaction="${emoji}"]`);
         const mine = chip && chip.classList.contains('mine');
-
-        if (mine) {
-            await updateDoc(ref, { [`reactions.${emoji}`]: arrayRemove(currentUser.uid) });
-        } else {
-            await updateDoc(ref, { [`reactions.${emoji}`]: arrayUnion(currentUser.uid) });
-        }
-    } catch (e) {
-        console.error('toggleReaction failed:', e);
-        alert('Не удалось поставить реакцию: ' + e.message);
-    }
+        if (mine) await updateDoc(ref, { [`reactions.${emoji}`]: arrayRemove(currentUser.uid) });
+        else await updateDoc(ref, { [`reactions.${emoji}`]: arrayUnion(currentUser.uid) });
+    } catch (e) { alert('Ошибка: ' + e.message); }
 }
 
 // ===== Ответы =====
@@ -303,26 +364,17 @@ async function sendGeneral() {
     const text = input.value.trim();
     if (!text) return;
     input.value = '';
-
     const payload = {
-        uid: currentUser.uid,
-        nick: currentNick,
-        tag: currentTag,
-        text,
-        pinned: false,
-        ts: serverTimestamp()
+        uid: currentUser.uid, nick: currentNick, tag: currentTag,
+        text, pinned: false, ts: serverTimestamp()
     };
-    if (generalReply) {
-        payload.replyTo = { uid: generalReply.uid, nick: generalReply.nick, text: generalReply.text };
-    }
+    if (generalReply) payload.replyTo = { uid: generalReply.uid, nick: generalReply.nick, text: generalReply.text };
     clearReply('general');
-
     try {
         await addDoc(collection(db, 'forum_general'), payload);
-    } catch (e) {
-        console.error(e);
-        alert('Не удалось отправить: ' + e.message);
-    }
+        // +2 XP за сообщение
+        try { await updateDoc(doc(db, 'users', currentUser.uid), { forumMsgCount: increment(1), exp: increment(2) }); } catch (e) {}
+    } catch (e) { alert('Не удалось отправить: ' + e.message); }
 }
 
 function subscribeGeneral() {
@@ -332,22 +384,15 @@ function subscribeGeneral() {
         box.innerHTML = '';
         const msgs = [];
         snap.forEach((d) => msgs.push({ id: d.id, ...d.data() }));
-
         renderPinned('general-pinned', msgs);
-
         if (msgs.length === 0) {
             box.innerHTML = '<div class="empty-chat">Сообщений пока нет</div>';
             return;
         }
-
-        msgs.forEach((m) => {
-            renderMsg(box, m, m.uid === currentUser.uid, 'general', m.id, null);
-        });
+        msgs.forEach((m) => renderMsg(box, m, m.uid === currentUser.uid, 'general', m.id, null));
         box.scrollTop = box.scrollHeight;
     }, (err) => {
-        console.error(err);
-        document.getElementById('general-messages').innerHTML =
-            '<div class="empty-chat">Ошибка: ' + err.message + '</div>';
+        document.getElementById('general-messages').innerHTML = '<div class="empty-chat">Ошибка: ' + err.message + '</div>';
     });
 }
 
@@ -370,9 +415,7 @@ async function loadAllUsers() {
         });
         renderUserList(allUsers);
     } catch (e) {
-        console.error(e);
-        document.getElementById('dm-users-list').innerHTML =
-            '<div class="empty-chat" style="padding:20px">Ошибка: ' + e.message + '</div>';
+        document.getElementById('dm-users-list').innerHTML = '<div class="empty-chat" style="padding:20px">Ошибка: ' + e.message + '</div>';
     }
 }
 
@@ -388,9 +431,9 @@ function renderUserList(list) {
         el.className = 'dm-user';
         el.dataset.uid = u.uid;
         el.innerHTML = `
-            <div class="dm-avatar">${avatarInner(u.uid, u.nick)}</div>
+            <div class="dm-avatar profile-link" data-uid="${u.uid}" style="cursor:pointer;">${avatarInner(u.uid, u.nick)}</div>
             <div class="dm-info">
-                <div class="nick" style="${getNickStyle(u.uid)}">
+                <div class="nick profile-link" data-uid="${u.uid}" style="${getNickStyle(u.uid)};cursor:pointer;">
                     ${escapeHtml(u.nick)}
                     ${isVerified(u.uid) ? verifiedSvg() : ''}
                 </div>
@@ -400,6 +443,13 @@ function renderUserList(list) {
             <button class="write-btn">Написать</button>
         `;
         el.addEventListener('click', () => openDM(u.uid, u.nick));
+        // Клик по нику/аватарке — открыть профиль, а не чат
+        el.querySelectorAll('.profile-link').forEach((inner) => {
+            inner.addEventListener('click', (e) => {
+                e.stopPropagation();
+                goProfile(u.uid);
+            });
+        });
         box.appendChild(el);
     });
 }
@@ -407,9 +457,9 @@ function renderUserList(list) {
 function filterUsers(q) {
     const s = q.trim().toLowerCase();
     if (!s) return renderUserList(allUsers);
-    const query = s.replace('#', '');
+    const query_ = s.replace('#', '');
     const filtered = allUsers.filter((u) =>
-        u.nick.toLowerCase().includes(s) || u.tag.toLowerCase().includes(query)
+        u.nick.toLowerCase().includes(s) || u.tag.toLowerCase().includes(query_)
     );
     renderUserList(filtered);
 }
@@ -419,8 +469,7 @@ function openDM(theirUid, theirNick) {
     document.querySelectorAll('.dm-user').forEach((el) => {
         el.classList.toggle('active', el.dataset.uid === theirUid);
     });
-    document.getElementById('dm-head-text').textContent =
-        'Чат с ' + theirNick + '  ·  #' + shortTag(theirUid);
+    document.getElementById('dm-head-text').textContent = 'Чат с ' + theirNick + '  ·  #' + shortTag(theirUid);
     document.getElementById('dm-back').style.display = 'inline-block';
     document.getElementById('dm-composer').style.display = 'flex';
     clearReply('dm');
@@ -436,7 +485,6 @@ function openDM(theirUid, theirNick) {
         box.innerHTML = '';
         const msgs = [];
         snap.forEach((d) => msgs.push({ id: d.id, ...d.data() }));
-
         const pinned = msgs.filter((m) => m.pinned === true);
         if (pinned.length) {
             const bar = document.createElement('div');
@@ -446,23 +494,19 @@ function openDM(theirUid, theirNick) {
                 <div class="pinned-item">
                     <span class="pin-label">📌</span>
                     <span class="pin-nick">${escapeHtml(m.nick)}:</span>
-                    <span class="pin-text">${escapeHtml(m.text)}</span>
+                    <span class="pin-text">${escapeHtml(m.text || '[файл]')}</span>
                 </div>
             `).join('');
             box.appendChild(bar);
         }
-
         if (msgs.length === 0) {
             box.innerHTML = '<div class="empty-chat">Сообщений пока нет</div>';
             return;
         }
-
         msgs.forEach((m) => renderMsg(box, m, m.uid === currentUser.uid, 'dm', m.id, chatId));
         box.scrollTop = box.scrollHeight;
     }, (err) => {
-        console.error(err);
-        document.getElementById('dm-messages').innerHTML =
-            '<div class="empty-chat">Ошибка: ' + err.message + '</div>';
+        document.getElementById('dm-messages').innerHTML = '<div class="empty-chat">Ошибка: ' + err.message + '</div>';
     });
 }
 
@@ -473,8 +517,7 @@ function closeDM() {
     document.getElementById('dm-head-text').textContent = 'Выберите собеседника';
     document.getElementById('dm-back').style.display = 'none';
     document.getElementById('dm-composer').style.display = 'none';
-    document.getElementById('dm-messages').innerHTML =
-        '<div class="empty-chat">Найдите пользователя и нажмите «Написать»</div>';
+    document.getElementById('dm-messages').innerHTML = '<div class="empty-chat">Найдите пользователя и нажмите «Написать»</div>';
     document.querySelectorAll('.dm-user').forEach((el) => el.classList.remove('active'));
 }
 
@@ -484,39 +527,117 @@ async function sendDM() {
     const text = input.value.trim();
     if (!text) return;
     input.value = '';
-
     const chatId = dmChatId(currentUser.uid, currentDMUser.uid);
     const payload = {
-        uid: currentUser.uid,
-        nick: currentNick,
-        tag: currentTag,
-        text,
-        pinned: false,
-        ts: serverTimestamp()
+        uid: currentUser.uid, nick: currentNick, tag: currentTag,
+        text, pinned: false, ts: serverTimestamp()
     };
-    if (dmReply) {
-        payload.replyTo = { uid: dmReply.uid, nick: dmReply.nick, text: dmReply.text };
-    }
+    if (dmReply) payload.replyTo = { uid: dmReply.uid, nick: dmReply.nick, text: dmReply.text };
     clearReply('dm');
-
     try {
         await setDoc(doc(db, 'forum_dm', chatId), {
             members: [currentUser.uid, currentDMUser.uid],
             lastTs: serverTimestamp()
         }, { merge: true });
         await addDoc(collection(db, 'forum_dm', chatId, 'messages'), payload);
-    } catch (e) {
-        console.error(e);
-        alert('Не удалось отправить: ' + e.message);
+        try { await updateDoc(doc(db, 'users', currentUser.uid), { forumMsgCount: increment(1), exp: increment(2) }); } catch (e) {}
+    } catch (e) { alert('Не удалось отправить: ' + e.message); }
+}
+
+// ===== ФАЙЛЫ =====
+document.querySelectorAll('.media-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+        currentMediaScope = btn.dataset.scope;
+        document.getElementById('media-file-input').click();
+    });
+});
+document.getElementById('media-file-input').addEventListener('change', handleFileSelect);
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_MEDIA_SIZE) {
+        alert('Файл слишком большой: ' + Math.round(file.size / 1024) + ' КБ. Максимум 700 КБ.');
+        e.target.value = '';
+        return;
     }
+    const reader = new FileReader();
+    reader.onload = async () => {
+        const dataUrl = reader.result;
+        const encrypted = encryptString(dataUrl);
+        const fileName = file.name;
+        const fileType = file.type || 'application/octet-stream';
+        const fileSize = file.size;
+        if (currentMediaScope === 'general') await sendGeneralFile(encrypted, fileName, fileType, fileSize);
+        else if (currentMediaScope === 'dm') await sendDMFile(encrypted, fileName, fileType, fileSize);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+}
+
+async function sendGeneralFile(encrypted, fileName, fileType, fileSize) {
+    if (!currentUser) return;
+    const payload = {
+        uid: currentUser.uid, nick: currentNick, tag: currentTag, text: '',
+        file: { data: encrypted, name: fileName, type: fileType, size: fileSize, encrypted: true },
+        pinned: false, ts: serverTimestamp()
+    };
+    if (generalReply) { payload.replyTo = { uid: generalReply.uid, nick: generalReply.nick, text: generalReply.text }; clearReply('general'); }
+    try { await addDoc(collection(db, 'forum_general'), payload); } catch (e) { alert('Ошибка: ' + e.message); }
+}
+
+async function sendDMFile(encrypted, fileName, fileType, fileSize) {
+    if (!currentUser || !currentDMUser) return;
+    const chatId = dmChatId(currentUser.uid, currentDMUser.uid);
+    const payload = {
+        uid: currentUser.uid, nick: currentNick, tag: currentTag, text: '',
+        file: { data: encrypted, name: fileName, type: fileType, size: fileSize, encrypted: true },
+        pinned: false, ts: serverTimestamp()
+    };
+    if (dmReply) { payload.replyTo = { uid: dmReply.uid, nick: dmReply.nick, text: dmReply.text }; clearReply('dm'); }
+    try {
+        await setDoc(doc(db, 'forum_dm', chatId), {
+            members: [currentUser.uid, currentDMUser.uid], lastTs: serverTimestamp()
+        }, { merge: true });
+        await addDoc(collection(db, 'forum_dm', chatId, 'messages'), payload);
+    } catch (e) { alert('Ошибка: ' + e.message); }
+}
+
+function downloadAttachedFile(msg) {
+    const f = decryptFileFromMsg(msg);
+    if (!f || !f.data) return;
+    const base64 = f.data.split(',')[1] || f.data;
+    const byteChars = atob(base64);
+    const bytes = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([bytes], { type: f.type || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = f.name || 'file';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function openMediaViewer(src) {
+    let viewer = document.getElementById('media-viewer');
+    if (!viewer) {
+        viewer = document.createElement('div');
+        viewer.id = 'media-viewer';
+        viewer.className = 'media-viewer';
+        viewer.innerHTML = '<img id="media-viewer-content" src="">';
+        viewer.addEventListener('click', () => viewer.classList.remove('open'));
+        document.body.appendChild(viewer);
+    }
+    document.getElementById('media-viewer-content').src = src;
+    viewer.classList.add('open');
 }
 
 // ===== Init =====
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = 'auth.html';
-        return;
-    }
+    if (!user) { window.location.href = 'auth.html'; return; }
     currentUser = user;
     currentNick = user.displayName || user.email.split('@')[0];
     currentTag = shortTag(user.uid);
@@ -525,15 +646,11 @@ onAuthStateChanged(auth, async (user) => {
     subscribeGeneral();
 
     document.getElementById('general-send').addEventListener('click', sendGeneral);
-    document.getElementById('general-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendGeneral();
-    });
+    document.getElementById('general-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendGeneral(); });
     document.getElementById('general-reply-cancel').addEventListener('click', () => clearReply('general'));
 
     document.getElementById('dm-send').addEventListener('click', sendDM);
-    document.getElementById('dm-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendDM();
-    });
+    document.getElementById('dm-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendDM(); });
     document.getElementById('dm-reply-cancel').addEventListener('click', () => clearReply('dm'));
     document.getElementById('dm-search').addEventListener('input', (e) => filterUsers(e.target.value));
     document.getElementById('dm-back').addEventListener('click', closeDM);

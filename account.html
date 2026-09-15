@@ -4,162 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Редактор аккаунта — HyoJoy</title>
-<style>
-:root {
-    --bg: #1a1a1a; --bg-panel: #2a2a2a; --bg-input: #1f1f1f;
-    --bg-input-focus: #242424; --bg-hover: #3a3a3a; --bg-active: #4a4a4a;
-    --border: #3a3a3a; --border-hover: #555555;
-    --text: #e0e0e0; --text-dim: #999999; --text-strong: #ffffff; --text-muted: #888888;
-    --danger: #cc8888; --danger-bg: #3a1f1f; --danger-border: #553333;
-    --success: #88cc88; --success-bg: #1f3a1f; --success-border: #335533;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-
-.header {
-    background: var(--bg-panel); border-bottom: 1px solid var(--border);
-    padding: 14px 30px;
-    display: flex; justify-content: space-between; align-items: center;
-}
-.logo { color: var(--text-strong); font-size: 18px; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; cursor: pointer; }
-.back-btn {
-    background: none; border: 1px solid var(--border-hover); color: var(--text);
-    padding: 8px 16px; font-size: 12px; letter-spacing: 1px;
-    text-transform: uppercase; cursor: pointer; transition: 0.2s;
-}
-.back-btn:hover { background: var(--bg-hover); color: var(--text-strong); }
-
-.main { flex: 1; padding: 50px 40px; display: flex; justify-content: center; }
-.panel { width: 460px; }
-h1 { font-size: 22px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-strong); margin-bottom: 30px; }
-h2 {
-    font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--text-dim); margin-bottom: 16px;
-    padding-bottom: 10px; border-bottom: 1px solid var(--border);
-}
-.section { margin-bottom: 40px; }
-.input-group { margin-bottom: 16px; }
-.input-group label {
-    display: block; font-size: 11px; color: var(--text-dim);
-    margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;
-}
-.input-group input {
-    width: 100%; padding: 14px; background: var(--bg-input);
-    border: 1px solid var(--border); color: var(--text); font-size: 14px;
-    outline: none; transition: 0.2s;
-}
-.input-group input:focus { border-color: var(--border-hover); background: var(--bg-input-focus); }
-.btn {
-    width: 100%; padding: 14px; background: var(--bg-active);
-    border: 1px solid var(--border-hover); color: var(--text-strong);
-    font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
-    cursor: pointer; transition: 0.2s;
-}
-.btn:hover { background: var(--bg-hover); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.message { margin-top: 14px; padding: 12px; font-size: 13px; text-align: center; display: none; border: 1px solid; }
-.message.error { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); display: block; }
-.message.success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); display: block; }
-
-/* ===== Профиль ===== */
-.profile-preview {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-}
-.profile-avatar {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    background: var(--bg-active);
-    border: 1px solid var(--border-hover);
-    color: var(--text-strong);
-    font-size: 24px; font-weight: bold;
-    display: flex; justify-content: center; align-items: center;
-    overflow: hidden;
-    text-transform: uppercase;
-    flex-shrink: 0;
-}
-.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.profile-info { flex: 1; min-width: 0; }
-.profile-nick {
-    font-size: 18px; font-weight: bold; color: var(--text-strong);
-    display: flex; align-items: center; gap: 6px;
-}
-.profile-status {
-    font-size: 13px;
-    margin-top: 4px;
-    font-weight: bold;
-}
-.profile-tag {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-family: monospace;
-    margin-top: 4px;
-}
-
-/* ===== Аватар ===== */
-.avatar-block { display: flex; align-items: center; gap: 24px; margin-bottom: 20px; }
-.avatar-preview {
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    background: var(--bg-active);
-    border: 2px solid var(--border-hover);
-    color: var(--text-strong);
-    font-size: 48px; font-weight: bold;
-    display: flex; justify-content: center; align-items: center;
-    overflow: hidden;
-    text-transform: uppercase;
-    user-select: none;
-    flex-shrink: 0;
-}
-.avatar-preview img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-}
-.avatar-actions { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.avatar-actions button {
-    padding: 10px 14px;
-    background: var(--bg-active);
-    border: 1px solid var(--border-hover);
-    color: var(--text-strong);
-    font-size: 12px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: 0.15s;
-}
-.avatar-actions button:hover { background: var(--bg-hover); }
-.avatar-actions button.danger {
-    border-color: var(--danger-border); color: var(--danger); background: transparent;
-}
-.avatar-actions button.danger:hover { background: var(--danger-bg); }
-#avatar-input { display: none; }
-</style>
+<link rel="stylesheet" href="account.css">
 </head>
 <body>
 
 <div class="header">
     <div class="logo" onclick="location.href='index.html'">HyoJoy</div>
-    <button class="back-btn" onclick="location.href='index.html'">Назад</button>
+    <div class="header-right">
+        <button class="back-btn" onclick="location.href='profile.html'">Мой профиль</button>
+        <button class="back-btn" onclick="location.href='index.html'">Главная</button>
+    </div>
 </div>
 
 <div class="main">
     <div class="panel">
         <h1>Редактор аккаунта</h1>
 
-        <!-- ПРОФИЛЬ -->
+        <!-- ЮЗЕРНЕЙМ -->
         <div class="section">
-            <h2>Профиль</h2>
-            <div class="profile-preview">
-                <div class="profile-avatar" id="profile-avatar">?</div>
-                <div class="profile-info">
-                    <div class="profile-nick" id="profile-nick">—</div>
-                    <div class="profile-status" id="profile-status"></div>
-                    <div class="profile-tag" id="profile-tag">#—</div>
+            <h2>Юзернейм</h2>
+            <div class="input-group">
+                <label>Юзернейм (латиница, цифры, _)</label>
+                <div class="username-row">
+                    <span class="username-at">@</span>
+                    <input type="text" id="username-input" maxlength="30" placeholder="username" autocomplete="off">
                 </div>
+                <div class="username-hint" id="username-hint">3–30 символов, латиница, цифры, _</div>
             </div>
+            <button class="btn" id="username-save-btn">Сохранить юзернейм</button>
+            <div class="message" id="username-msg"></div>
         </div>
 
         <!-- АВАТАР -->
@@ -177,24 +50,22 @@ h2 {
             <div class="message" id="avatar-msg"></div>
         </div>
 
-        <!-- СМЕНА НИКА -->
+        <!-- НИК И ПАРОЛЬ -->
         <div class="section">
-            <h2>Смена ника</h2>
+            <h2>Ник и пароль</h2>
             <div class="input-group">
-                <label>Новый ник</label>
-                <input type="text" id="new-nick" placeholder="Введите новый ник">
+                <label>Ник</label>
+                <input type="text" id="new-nick" placeholder="Введите ник">
             </div>
             <div class="input-group">
-                <label>Пароль для подтверждения</label>
+                <label>Пароль для подтверждения (нужен для смены ника)</label>
                 <input type="password" id="nick-pass" placeholder="Ваш текущий пароль">
             </div>
             <button class="btn" id="nick-btn">Сменить ник</button>
             <div class="message" id="nick-msg"></div>
-        </div>
 
-        <!-- СМЕНА ПАРОЛЯ -->
-        <div class="section">
-            <h2>Смена пароля</h2>
+            <div class="divider"></div>
+
             <div class="input-group">
                 <label>Текущий пароль</label>
                 <input type="password" id="old-pass" placeholder="Введите текущий пароль">
@@ -210,249 +81,59 @@ h2 {
             <button class="btn" id="pass-btn">Сменить пароль</button>
             <div class="message" id="pass-msg"></div>
         </div>
+
+        <!-- ПРОФИЛЬ -->
+        <div class="section">
+            <h2>Профиль</h2>
+
+            <div class="input-group">
+                <label>Кастомный статус</label>
+                <input type="text" id="edit-custom-status" maxlength="50" placeholder="Играю, Смотрю стрим...">
+            </div>
+            <div class="input-group">
+                <label>Био (до 200 символов)</label>
+                <textarea id="edit-bio" rows="4" maxlength="200" placeholder="О себе..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>Локация</label>
+                <input type="text" id="edit-location" maxlength="60" placeholder="Москва, Россия">
+            </div>
+            <div class="input-group">
+                <label>Дата рождения</label>
+                <input type="date" id="edit-birthday">
+            </div>
+            <div class="input-group">
+                <label>Любимые игры (через запятую)</label>
+                <input type="text" id="edit-games" placeholder="Minecraft, CS2, Dota 2">
+            </div>
+            <div class="input-group">
+                <label>Любимые фильмы (через запятую)</label>
+                <input type="text" id="edit-movies" placeholder="Inception, Matrix">
+            </div>
+        </div>
+
+        <!-- ССЫЛКИ -->
+        <div class="section">
+            <h2>Ссылки</h2>
+            <div class="input-group">
+                <label>Свой сайт</label>
+                <input type="text" id="edit-site" placeholder="https://example.com">
+            </div>
+            <div class="input-group">
+                <label>Discord</label>
+                <input type="text" id="edit-discord" maxlength="60" placeholder="username#0000">
+            </div>
+            <div class="input-group">
+                <label>Telegram</label>
+                <input type="text" id="edit-telegram" maxlength="60" placeholder="@username">
+            </div>
+            <button class="btn save-profile" id="save-profile-btn">Сохранить профиль</button>
+            <div class="message" id="profile-msg"></div>
+        </div>
     </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-    getAuth, onAuthStateChanged, updateProfile,
-    EmailAuthProvider, reauthenticateWithCredential, updatePassword
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCUSTTJhonzZPOKWUbe_qMZfMmVyFSxjPE",
-    authDomain: "hyojoy-41840.firebaseapp.com",
-    projectId: "hyojoy-41840",
-    storageBucket: "hyojoy-41840.firebasestorage.app",
-    messagingSenderId: "714253431446",
-    appId: "1:714253431446:web:fe08e2cbe51c768dfd48b7",
-    measurementId: "G-DQ3F2VMTCJ"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let currentUser = null;
-let pendingAvatarData = null;
-
-function showMessage(id, text, type) {
-    const el = document.getElementById(id);
-    el.textContent = text;
-    el.className = 'message ' + type;
-}
-
-function translateError(code) {
-    const map = {
-        'auth/invalid-credential': 'Неверный пароль',
-        'auth/wrong-password': 'Неверный пароль',
-        'auth/weak-password': 'Пароль слишком простой',
-        'auth/too-many-requests': 'Слишком много попыток',
-        'auth/requires-recent-login': 'Войдите заново'
-    };
-    return map[code] || 'Ошибка: ' + code;
-}
-
-function escapeHtml(s) {
-    return String(s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-function processImage(file, size = 256) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const side = Math.min(img.width, img.height);
-                const sx = (img.width - side) / 2;
-                const sy = (img.height - side) / 2;
-                const canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
-                resolve(canvas.toDataURL('image/jpeg', 0.85));
-            };
-            img.onerror = () => reject(new Error('Не удалось прочитать изображение'));
-            img.src = e.target.result;
-        };
-        reader.onerror = () => reject(new Error('Ошибка чтения файла'));
-        reader.readAsDataURL(file);
-    });
-}
-
-function renderAvatarPreview(dataUrl, nick) {
-    const box = document.getElementById('avatar-preview');
-    if (dataUrl) {
-        box.innerHTML = `<img src="${dataUrl}" alt="avatar">`;
-    } else {
-        box.innerHTML = '';
-        box.textContent = (nick || '?').charAt(0).toUpperCase();
-    }
-}
-
-onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = 'auth.html';
-        return;
-    }
-    currentUser = user;
-    const nick = user.displayName || user.email.split('@')[0];
-    document.getElementById('new-nick').value = nick;
-
-    try {
-        const snap = await getDoc(doc(db, 'users', user.uid));
-        const data = snap.exists() ? snap.data() : {};
-
-        if (data.avatar) {
-            renderAvatarPreview(data.avatar, nick);
-            document.getElementById('remove-avatar-btn').style.display = 'block';
-        } else {
-            renderAvatarPreview(null, nick);
-        }
-
-        const profileAvatar = document.getElementById('profile-avatar');
-        if (data.avatar) {
-            profileAvatar.innerHTML = `<img src="${data.avatar}" alt="">`;
-        } else {
-            profileAvatar.textContent = nick.charAt(0).toUpperCase();
-        }
-
-        const profileNick = document.getElementById('profile-nick');
-        let html = escapeHtml(nick);
-        if (data.verified) {
-            html += ` <svg viewBox="0 0 24 24" fill="#a0c4ff" xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;vertical-align:-3px;">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
-            </svg>`;
-        }
-        profileNick.innerHTML = html;
-        if (data.nickColor) profileNick.style.color = data.nickColor;
-
-        const profileStatus = document.getElementById('profile-status');
-        if (data.status) {
-            profileStatus.textContent = data.status;
-            profileStatus.style.color = data.statusColor || '#a0c4ff';
-        } else {
-            profileStatus.textContent = '';
-        }
-
-        document.getElementById('profile-tag').textContent = '#' + user.uid.slice(0, 8);
-    } catch (e) {
-        console.error(e);
-        renderAvatarPreview(null, nick);
-    }
-});
-
-document.getElementById('pick-avatar-btn').addEventListener('click', () => {
-    document.getElementById('avatar-input').click();
-});
-
-document.getElementById('avatar-input').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-        const dataUrl = await processImage(file);
-        pendingAvatarData = dataUrl;
-        renderAvatarPreview(dataUrl, currentUser.displayName || '');
-        document.getElementById('save-avatar-btn').style.display = 'block';
-    } catch (err) {
-        showMessage('avatar-msg', err.message, 'error');
-    }
-    e.target.value = '';
-});
-
-document.getElementById('save-avatar-btn').addEventListener('click', async () => {
-    if (!pendingAvatarData) return;
-    const btn = document.getElementById('save-avatar-btn');
-    btn.disabled = true;
-    try {
-        await updateDoc(doc(db, 'users', currentUser.uid), {
-            avatar: pendingAvatarData
-        });
-        showMessage('avatar-msg', 'Аватар сохранён', 'success');
-        document.getElementById('remove-avatar-btn').style.display = 'block';
-        document.getElementById('save-avatar-btn').style.display = 'none';
-        document.getElementById('profile-avatar').innerHTML = `<img src="${pendingAvatarData}" alt="">`;
-        pendingAvatarData = null;
-    } catch (e) {
-        console.error(e);
-        showMessage('avatar-msg', 'Ошибка: ' + e.message, 'error');
-    }
-    btn.disabled = false;
-});
-
-document.getElementById('remove-avatar-btn').addEventListener('click', async () => {
-    const btn = document.getElementById('remove-avatar-btn');
-    btn.disabled = true;
-    try {
-        await updateDoc(doc(db, 'users', currentUser.uid), {
-            avatar: null
-        });
-        const nick = currentUser.displayName || currentUser.email.split('@')[0];
-        renderAvatarPreview(null, nick);
-        document.getElementById('profile-avatar').textContent = nick.charAt(0).toUpperCase();
-        document.getElementById('remove-avatar-btn').style.display = 'none';
-        document.getElementById('save-avatar-btn').style.display = 'none';
-        pendingAvatarData = null;
-        showMessage('avatar-msg', 'Аватар удалён', 'success');
-    } catch (e) {
-        console.error(e);
-        showMessage('avatar-msg', 'Ошибка: ' + e.message, 'error');
-    }
-    btn.disabled = false;
-});
-
-document.getElementById('nick-btn').addEventListener('click', async () => {
-    const newNick = document.getElementById('new-nick').value.trim();
-    const pass = document.getElementById('nick-pass').value;
-
-    if (!newNick || !pass) return showMessage('nick-msg', 'Заполните все поля', 'error');
-    if (newNick.length < 3) return showMessage('nick-msg', 'Ник минимум 3 символа', 'error');
-    if (!/^[a-zA-Z0-9_]+$/.test(newNick)) return showMessage('nick-msg', 'Только латиница, цифры, _', 'error');
-
-    const btn = document.getElementById('nick-btn');
-    btn.disabled = true;
-    try {
-        const cred = EmailAuthProvider.credential(currentUser.email, pass);
-        await reauthenticateWithCredential(currentUser, cred);
-        await updateProfile(currentUser, { displayName: newNick });
-        await updateDoc(doc(db, 'users', currentUser.uid), { nick: newNick });
-        showMessage('nick-msg', 'Ник обновлён', 'success');
-    } catch (e) {
-        showMessage('nick-msg', translateError(e.code), 'error');
-    }
-    btn.disabled = false;
-});
-
-document.getElementById('pass-btn').addEventListener('click', async () => {
-    const oldPass = document.getElementById('old-pass').value;
-    const newPass = document.getElementById('new-pass').value;
-    const newPass2 = document.getElementById('new-pass2').value;
-
-    if (!oldPass || !newPass || !newPass2) return showMessage('pass-msg', 'Заполните все поля', 'error');
-    if (newPass.length < 6) return showMessage('pass-msg', 'Пароль минимум 6 символов', 'error');
-    if (newPass !== newPass2) return showMessage('pass-msg', 'Пароли не совпадают', 'error');
-
-    const btn = document.getElementById('pass-btn');
-    btn.disabled = true;
-    try {
-        const cred = EmailAuthProvider.credential(currentUser.email, oldPass);
-        await reauthenticateWithCredential(currentUser, cred);
-        await updatePassword(currentUser, newPass);
-        showMessage('pass-msg', 'Пароль обновлён', 'success');
-        document.getElementById('old-pass').value = '';
-        document.getElementById('new-pass').value = '';
-        document.getElementById('new-pass2').value = '';
-    } catch (e) {
-        showMessage('pass-msg', translateError(e.code), 'error');
-    }
-    btn.disabled = false;
-});
-</script>
+<script type="module" src="account.js"></script>
+<script type="module" src="online.js"></script>
 </body>
 </html>

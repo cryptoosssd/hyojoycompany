@@ -16,7 +16,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
 body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
-/* Шапка */
 .header {
     background: var(--bg-panel); border-bottom: 1px solid var(--border);
     padding: 14px 30px;
@@ -67,7 +66,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
 .dropdown-item:hover { background: var(--bg-hover); color: var(--text-strong); }
 .dropdown-item:last-child:hover { background: var(--danger-bg); }
 
-/* Основной контент */
 .main {
     flex: 1;
     padding: 60px 40px;
@@ -75,11 +73,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
     margin: 0 auto;
     width: 100%;
 }
-
-/* Приветствие */
-.hero {
-    margin-bottom: 50px;
-}
+.hero { margin-bottom: 50px; }
 .hero h1 {
     font-size: 42px;
     font-weight: 300;
@@ -87,13 +81,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
     color: var(--text-strong);
     margin-bottom: 8px;
 }
-.hero p {
-    color: var(--text-muted);
-    font-size: 14px;
-    letter-spacing: 1px;
-}
+.hero p { color: var(--text-muted); font-size: 14px; letter-spacing: 1px; }
 
-/* О компании */
 .company-section {
     background: var(--bg-panel);
     border: 1px solid var(--border);
@@ -117,7 +106,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
     word-wrap: break-word;
 }
 
-/* Скачать игру */
 .downloads-section {
     background: var(--bg-panel);
     border: 1px solid var(--border);
@@ -137,7 +125,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
     letter-spacing: 1px;
     margin-bottom: 24px;
 }
-
 .downloads-list { display: flex; flex-direction: column; gap: 10px; }
 
 .download-item {
@@ -150,7 +137,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
     transition: 0.15s;
 }
 .download-item:hover { border-color: var(--border-hover); background: var(--bg-hover); }
-
 .download-icon {
     width: 44px; height: 44px;
     background: var(--bg-active);
@@ -165,8 +151,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
 .download-desc { color: var(--text-muted); font-size: 12px; margin-top: 3px; }
 .download-size {
     color: var(--text-muted); font-size: 11px;
-    font-family: monospace;
-    margin-right: 12px;
+    font-family: monospace; margin-right: 12px;
     flex-shrink: 0;
 }
 .download-btn {
@@ -213,6 +198,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
         <button class="nav-btn" onclick="location.href='store.html'">Магазин</button>
         <button class="nav-btn" onclick="location.href='users.html'">Аккаунты</button>
         <button class="nav-btn" onclick="location.href='forum.html'">Форум</button>
+        <button class="nav-btn" onclick="location.href='feed.html'">Лента</button>
         <button class="nav-btn" onclick="location.href='company.html'">Компания</button>
         <button class="nav-btn" onclick="location.href='invest.html'">Инвестиции</button>
         <button class="nav-btn" onclick="location.href='cart.html'">Корзина (<span id="cart-count">0</span>)</button>
@@ -220,6 +206,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; display: fl
         <div class="avatar-wrap">
             <div class="avatar" id="avatar">?</div>
             <div class="dropdown" id="dropdown">
+                <button class="dropdown-item" onclick="location.href='profile.html'">Мой профиль</button>
                 <button class="dropdown-item" onclick="location.href='account.html'">Редактор аккаунта</button>
                 <button class="dropdown-item" onclick="location.href='settings.html'">Настройки</button>
                 <button class="dropdown-item" id="logout-btn">Выйти с аккаунта</button>
@@ -269,14 +256,12 @@ const db = getFirestore(app);
 
 let allFilesCache = {};
 
-// Счётчик корзины
 try {
     const cart = JSON.parse(localStorage.getItem('hyojoy_cart') || '{}');
     document.getElementById('cart-count').textContent =
         Object.values(cart).reduce((a, b) => a + b, 0);
 } catch (e) {}
 
-// ===== Компания =====
 async function loadCompany() {
     try {
         const snap = await getDoc(doc(db, 'config', 'main'));
@@ -287,12 +272,9 @@ async function loadCompany() {
             document.getElementById('company-desc').textContent =
                 d.companyDescription || 'Описание компании пока не заполнено.';
         }
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (e) { console.error(e); }
 }
 
-// ===== Файлы для скачивания =====
 async function loadDownloads() {
     const box = document.getElementById('downloads-list');
     try {
@@ -304,7 +286,6 @@ async function loadDownloads() {
         const files = [];
         snap.forEach((d) => files.push({ id: d.id, ...d.data() }));
         files.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
         allFilesCache = {};
         files.forEach((f) => allFilesCache[f.id] = f);
 
@@ -335,7 +316,6 @@ async function loadDownloads() {
 function downloadFile(id) {
     const f = allFilesCache[id];
     if (!f || !f.data) return;
-
     const byteChars = atob(f.data);
     const bytes = new Uint8Array(byteChars.length);
     for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
@@ -357,12 +337,10 @@ function escapeHtml(s) {
         .replace(/'/g, '&#39;');
 }
 
-// ===== Авторизация =====
 let redirected = false;
 
 onAuthStateChanged(auth, async (user) => {
     if (redirected) return;
-
     if (!user) {
         redirected = true;
         window.location.href = 'auth.html';
@@ -392,12 +370,9 @@ onAuthStateChanged(auth, async (user) => {
             badge.style.cssText = 'position:absolute;bottom:-2px;right:-2px;background:#1a1a1a;border-radius:50%;padding:2px;display:flex;';
             avatarEl.appendChild(badge);
         }
-    } catch (e) {
-        console.error('avatar load error:', e);
-    }
+    } catch (e) { console.error(e); }
 });
 
-// Аватарка — клик
 document.getElementById('avatar').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('dropdown').classList.toggle('open');
@@ -411,9 +386,9 @@ document.getElementById('logout-btn').addEventListener('click', async (e) => {
     window.location.href = 'auth.html';
 });
 
-// ===== Загрузка при старте =====
 loadCompany();
 loadDownloads();
 </script>
+<script type="module" src="online.js"></script>
 </body>
 </html>
