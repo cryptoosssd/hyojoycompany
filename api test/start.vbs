@@ -1,0 +1,1 @@
+CreateObject("WScript.Shell").Run "javaw -jar """ & CreateObject("Scripting.FileSystemObject").GetParentFolderName(WScript.ScriptFullName) & "\HyoJoyGame.jar""", 0, False

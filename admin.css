@@ -555,3 +555,18 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     letter-spacing: 0.5px;
     line-height: 1.6;
 }
+/* ===== О компании ===== */
+.api-card textarea {
+    width: 100%;
+    padding: 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 200px;
+}
+.api-card textarea:focus { border-color: var(--border-hover); }
